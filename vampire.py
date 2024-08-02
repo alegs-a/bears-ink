@@ -18,7 +18,6 @@ class Player:
         self.light = PLAYER_LIGHT
         self.stakes = PLAYER_STAKES
         self.damaged = False
-        self.recover = False
 
     def damage(self):
         self.health -= DRACULA_DAMAGE
@@ -90,7 +89,7 @@ class Dracula:
         
         self.room = room
         for player in players:
-            if player.room.id == room.id and not player.damaged and not player.recover:
+            if player.room.id == room.id and not player.damaged:
                 player.damage()
         return True
 
@@ -194,10 +193,7 @@ class Gamestate:
         for i in range(len(self.players)):
             if self.players[i].damaged:
                 self.players[i].damaged = False
-                self.players[i].recover = True
                 continue
-            if self.players[i].recover:
-                self.players[i].recover = False
 
             self.draw_map(PLAYER_GODMODE)
             self.draw_stats(PLAYER_GODMODE)
