@@ -207,13 +207,13 @@ class Gamestate:
                 action, arg = command
 
                 if action == "help":
-                    print("map           View the map.")
-                    print("stats         View stats of the current players.")
-                    print("mv     [room] Move into an adjacent room.")
-                    print("gar    [room] Throw garlic to check if Dracula is in an adjecent room.")
-                    print("light  [room] Create light in an adjacent room to stop Dracula entering.")
-                    print("stake  [room] Throw a stake into an adjacent room to attack Dracula.")
-                    print("skip          End your turn.")
+                    print("map          View the map.")
+                    print("stats        View stats of the current players.")
+                    print("mv [room]    Move into an adjacent room.")
+                    print("gar [room]   Throw garlic to check if Dracula is in an adjecent room.")
+                    print("light [room] Create light in an adjacent room to stop Dracula entering.")
+                    print("stake [room] Throw a stake into an adjacent room to attack Dracula.")
+                    print("skip         End your turn.")
                 elif action == "map":
                     self.draw_map(PLAYER_GODMODE)
                 elif action == "stats":
@@ -274,10 +274,10 @@ class Gamestate:
             action, arg = command
 
             if action == "help":
-                print("map           View the map.")
-                print("stats         View stats of the current players.")
-                print("mv     [room] Move into an adjacent room.")
-                print("skip          End your turn.")
+                print("map       View the map.")
+                print("stats     View stats of the current players.")
+                print("mv [room] Move into an adjacent room.")
+                print("skip      End your turn.")
             elif action == "map":
                 self.draw_map(True)
             elif action == "stats":
