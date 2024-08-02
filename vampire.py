@@ -1,3 +1,5 @@
+import os
+
 class Room:
     def __init__(self, id, adj, pos, name):
         self.id = id
@@ -13,9 +15,12 @@ class Player:
         self.room = None
         self.light = 5
         self.stakes = 5
+        self.damaged = False
+        self.recover = False
 
     def damage(self):
         self.health -= 1
+        self.damaged = True
 
     def move(self, room):
         # Can player stay in same room / move 0?
@@ -74,9 +79,20 @@ class Dracula:
     def damage(self):
         self.health -= 1
     
-    def move(self, room):
+    def move(self, room, players):
         if room.id in self.room.adj:
-            self.room = room
+            if not room.light:
+                self.room = room
+                for player in players:
+                    if player.room.id == room.id and not player.damaged and not player.recover:
+                        player.damage()
+                return True
+            else:
+                print("That room contains light.")
+                return False
+        else:
+            print("That room is not adjacent.")
+            return False
 
 class Gamestate:
     def __init__(self, players, layout):
@@ -125,7 +141,7 @@ class Gamestate:
                 grid[y + 1 + i][x] = "#"
                 grid[y + 1 + i][x + 5] = "#"
             if room.light:
-                grid[y + 2][x + 3] = "S"
+                grid[y + 2][x + 3] = "L"
             grid[y][x + 2] = room.name[0]
             grid[y][x + 3] = room.name[1]
         
@@ -167,9 +183,25 @@ class Gamestate:
         print()
 
     def player_turn(self):
+        os.system('cls')
+
+        for i in range(len(self.players) - 1, -1, -1):
+            if self.players[i].health == 0:
+                print(f"Player {i + 1} has died.")
+                self.players.pop(i)
+            elif self.players[i].damaged:
+                print(f"Player {i + 1} was bitten.")
+        
         for i in range(len(self.players)):
-            self.draw_map(True)
-            self.draw_stats(True)
+            if self.players[i].damaged:
+                self.players[i].damaged = False
+                self.players[i].recover = True
+                continue
+            if self.players[i].recover:
+                self.players[i].recover = False
+
+            self.draw_map(False)
+            self.draw_stats(False)
 
             moved = False
             garlic = False
@@ -189,9 +221,9 @@ class Gamestate:
                     print("stake  [room] Throw a stake into an adjacent room to attack Dracula.")
                     print("skip          End your turn.")
                 elif action == "map":
-                    self.draw_map(True)
+                    self.draw_map(False)
                 elif action == "stats":
-                    self.draw_stats(True)
+                    self.draw_stats(False)
                 elif action == "mv":
                     if moved:
                         print("You have already moved on your turn.")
@@ -201,8 +233,6 @@ class Gamestate:
                         print("That room does not exist.")
                         continue
                     moved = self.players[i].move(room)
-                    if moved:
-                        self.draw_map(True)
                 elif action == "gar":
                     if garlic:
                         print("You have already thrown garlic on your turn.")
@@ -227,12 +257,65 @@ class Gamestate:
                         continue
                     if not self.players[i].throw_stake(room, self.dracula):
                         continue
+                    if self.dracula.health == 0:
+                        return True
                     break
                 elif action == "skip":
                     break
                 else:
                     print("Unknown command")
+        return False
 
-gamestate = Gamestate(1, 0)
-while True:
-    gamestate.player_turn()
+    def dracula_turn(self):
+        os.system('cls')
+        if len(self.players) == 0:
+            return True
+        self.draw_map(True)
+        self.draw_stats(True)
+        moves = 0
+        while True:
+            command = input("Dracula: ").split(" ", 1)
+            if len(command) == 1:
+                command += ['']
+            action, arg = command
+
+            if action == "help":
+                print("map           View the map.")
+                print("stats         View stats of the current players.")
+                print("mv     [room] Move into an adjacent room.")
+                print("skip          End your turn.")
+            elif action == "map":
+                self.draw_map(True)
+            elif action == "stats":
+                self.draw_stats(True)
+            elif action == "mv":
+                room = self.find_room(arg)
+                if room == None:
+                    print("That room does not exist.")
+                    continue
+                moved = self.dracula.move(room, self.players)
+                if moved:
+                    moves += 1
+                    if moves == 3:
+                         break
+            elif action == "skip":
+                break
+            else:
+                print("Unknown command")
+
+        for room in self.rooms:
+            room.light = False
+        return False
+
+def main():
+    gamestate = Gamestate(int(input("How many players? ")), 0)
+    while True:
+        if gamestate.player_turn():
+            print("Dracula has been defeated. Players win!")
+            break
+        if gamestate.dracula_turn():
+            print("All players have been killed. Dracula wins!")
+            break
+
+if __name__ == "__main__":
+    main()
