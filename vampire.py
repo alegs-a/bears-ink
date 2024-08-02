@@ -24,7 +24,6 @@ class Player:
         self.damaged = True
 
     def move(self, room):
-        # Can player stay in same room / move 0?
         if not room.id in self.room.adj:
             print("That room is not adjacent.")
             return False
