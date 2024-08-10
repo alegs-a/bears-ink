@@ -21,8 +21,8 @@
 		"source=/dev,target=/dev,type=bind",
 		"source=/opt,target=/opt,type=bind"
 	],
-	"workspaceMount": "source=${localWorkspaceFolder},target=/root/${localWorkspaceFolderBasename},type=bind,consistency=cached",
-	"workspaceFolder": "/root/${localWorkspaceFolderBasename}",
+	"workspaceMount": "source=${localWorkspaceFolder},target=/root/bearsink,type=bind,consistency=cached",
+	"workspaceFolder": "/root/bearsink",
 	"postCreateCommand": "gcc -v && cmake --version && python3 --version",
 	"customizations": {
 		"vscode": {

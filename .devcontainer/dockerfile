@@ -46,6 +46,6 @@ RUN cd /root && \
     rm -rf nrf-command-line-tools_10.24.0_amd64.deb
 
 # Initialise zephyr on every command prompt.
-RUN echo 'source $ZEPHYR_BASE/zephyr/zephyr-env.sh' >> /root/.bashrc
+RUN echo 'source $(find $ZEPHYR_BASE -name zephyr-env.sh)' >> /root/.bashrc
 
 ENTRYPOINT ["entrypoint.sh", "bash"]

@@ -1,1 +1,1 @@
-source $ZEPHYR_BASE/zephyr/zephyr-env.sh
+source $ZEPHYR_BASE/zephyr-env.sh

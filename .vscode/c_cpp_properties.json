@@ -3,7 +3,7 @@
     "configurations": [
         {
             "name": "Linux",
-            "intelliSenseMode": "linux-gcc-x64",
+            "intelliSenseMode": "linux-gcc-arm",
             "cStandard": "c99",
             "defines": [],
             "includePath": [
