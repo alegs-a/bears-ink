@@ -1,0 +1,52 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": "./scripts/build.sh",
+            "presentation": {
+                "clear": true
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash",
+            "type": "shell",
+            "command": "./scripts/flash.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "./scripts/clean.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "West Source",
+            "type": "shell",
+            "command": "./scripts/source_zephyr.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "West Update",
+            "type": "shell",
+            "command": "./scripts/west_update.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "JLink Update Udev Rules",
+            "type": "shell",
+            "command": "./scripts/jlink_postinit.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "Screen",
+            "type": "shell",
+            "command": "./scripts/screen.sh",
+            "problemMatcher": []
+        }
+    ]
+}

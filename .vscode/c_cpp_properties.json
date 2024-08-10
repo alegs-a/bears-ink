@@ -1,0 +1,17 @@
+{
+    "env": {},
+    "configurations": [
+        {
+            "name": "Linux",
+            "intelliSenseMode": "linux-gcc-x64",
+            "cStandard": "c99",
+            "defines": [],
+            "includePath": [
+                "${workspaceFolder}/dracula/src/**",
+                "/root/zephyr-3.5.0/zephyr/include/**"
+            ],
+            "compilerPath": "/root/zephyr-sdk-0.16.5/arm-zephyr-eabi/bin/arm-zephyr-eabi-gcc"
+        }
+    ],
+    "version": 4
+}

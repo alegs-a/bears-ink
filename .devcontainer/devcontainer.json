@@ -1,0 +1,39 @@
+// https://aka.ms/devcontainer.json
+// https://github.com/devcontainers/templates/tree/main/src/docker-existing-docker-compose
+{
+	"name": "Zephyr Development Environment",
+	// "image": "csse4011-advancedembeddedsystems_devcontainer-zephyr",
+	"build": {
+		"dockerfile": "dockerfile",
+		"args": { 
+			"BASE_IMAGE": "ubuntu:latest",
+			"ZEPHYR_VERSION": "3.5.0",
+			"ZEPHYR_SDK_VERSION": "0.16.5"
+		}
+	},
+	"runArgs": [
+		"--cap-add=SYS_PTRACE", 
+		"--security-opt",
+		"seccomp=unconfined",
+		"--privileged",
+		"--network=host"
+	],
+	"mounts": [
+		"source=/dev,target=/dev,type=bind",
+		"source=/opt,target=/opt,type=bind"
+	],
+	"workspaceMount": "source=${localWorkspaceFolder},target=/root/${localWorkspaceFolderBasename},type=bind,consistency=cached",
+	"workspaceFolder": "/root/${localWorkspaceFolderBasename}",
+	"postCreateCommand": "gcc -v && cmake --version && python3 --version",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"ms-vscode.cpptools",
+				"ms-vscode.cmake-tools",
+				"marus25.cortex-debug",
+				"nordic-semiconductor.nrf-devicetree",
+				"nordic-semiconductor.nrf-kconfig"
+			]
+		}
+	}
+}

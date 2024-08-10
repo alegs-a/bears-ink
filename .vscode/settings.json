@@ -1,0 +1,10 @@
+{
+    // Workspace configuration.
+    "board": "nucleo_l432kc",
+    "board_id": "1",
+
+    // Extension configuration.
+    "cmake.configureOnOpen": false,
+    "C_Cpp.autoAddFileAssociations": false,
+    "cortex-debug.armToolchainPath": ""
+}
