@@ -32,6 +32,7 @@ data GameState = GameState
     , playerLives :: Int
     , dracLives :: Int
     , lastKnownLocation :: Maybe Room -- if the players knew Drac's position last turn
+    , canBite :: Bool
     }
 
 

@@ -10,6 +10,7 @@ import Data.Bifunctor (first, second)
 playerMoves :: GameState -> [PlayerTurn]
 playerMoves startState = do
     (resting, acting) <- actionPartition
+    moves <- traverse (walks 1 . (positions startState !)) acting
     undefined
     where
         playerGarlic r = filter
@@ -18,17 +19,17 @@ playerMoves startState = do
 
 
 dracMoves :: GameState -> [DracTurn]
-dracMoves startState = DracTurn <$> walks (drac startState) 3
+dracMoves = fmap DracTurn . walks 3 . drac
 
 
 -- walks start len gives all walks starting at start and of length at
 -- most len. The length is the number of rooms in the walk, which does
 -- not include the starting room (so the empty walk is valid)
-walks :: Room -> Int -> [[Room]]
-walks start 0   = [[]] -- ONLY valid walk of length 0
-walks start len = [] : do
+walks :: Int -> Room -> [[Room]]
+walks 0 start   = [[]] -- ONLY valid walk of length 0
+walks len start = [] : do
     start' <- adjacent start
-    (:) start' <$> walks start' (len - 1)
+    (:) start' <$> walks (len - 1) start'
 
 
 -- All the rooms that are AT MOST n away from the starting room
@@ -37,6 +38,7 @@ roomCloud 0 start = [start]
 roomCloud n start = start : filter (/= start) (adjacent start >>= roomCloud (n - 1))
 
 
+actionPartition :: [([Int], [Int])]
 actionPartition = twoParts [0..3] -- Indexes into the vector
     where
         -- Find all ORDERED two-partitions of the input list
