@@ -1,0 +1,41 @@
+Week: 5
+Date: 23/08/24
+
+Completed Tasks:
+- Completed another game play test. The key feedback was that one end of the
+  board heavily favours the players.
+- Sketches for interaction design
+- Updated digital prototype and made an interface for AIs to control the game
+- Started implementing some AI models
+- Got some hardware set up and ready to receive RFID driver code
+
+Current Focus:
+- Making concrete interaction design decisions.
+- Finalising the game board layout. This will have considerations for the
+  interactive technology chosen.
+- Fix the SoW by including concrete breakdowns of tasks, each of which will have
+  a deadline. We will also include the Week 6 presentation.
+- Investigating potential options for the way the AI will work
+- Figuring out how our current design ideas will work in hardware, then arriving
+  at concrete decisions.
+- Writing RFID driver code
+- Writing display driver
+
+Upcoming Tasks:
+- Milestone 1 is next week.
+- Prepare the slide deck for the presentation
+- Implementing game logic for the board in C, ready for hardware.
+- Research and implement simple AI models in a high level
+
+Challenges/Roadblocks:
+- Some team members are having trouble getting the development environment set
+  up. We might need to use x86 machines for this purpose.
+- Not familiar with the OS running on the embedded hardware.
+- Balancing work on the project with work on other classes
+
+Key Insights or Decisions (optional):
+- AI idea: quantam Dracula. The AI keeps track of where Dracula *could* be,
+  rather than having a concrete position at all times;
+- If RFID code is not being developed fast enough, we will NEED to move to
+  arduino. This is not ideal because we would lose a real-time OS with threading
+  and dynamic heap memory.
