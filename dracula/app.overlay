@@ -1,0 +1,9 @@
+/ {
+	aliases {
+		rfid-i2c = &i2c1;
+	};
+};
+
+&i2c1 {
+	status = "okay";
+};
