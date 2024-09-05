@@ -1,0 +1,32 @@
+Week: 5
+Date: 23/08/24
+
+Completed Tasks:
+- Script writing and slide deck for the presentation 
+- Progress on RFID drivers (works sometimes)
+- Design decisions for interactions - use raised platforms for readers so users
+  can plan moves, button to confirm, etc.
+- Statement of work
+- Progress on display drivers
+
+Current Focus:
+- Finalising the game board layout. This will have considerations for the
+  interactive technology chosen.
+- Write quantum Dracula AI
+- Investigating other options for the way the AI will work
+- Writing RFID driver code
+- Writing display driver
+- Visual design brainstorming
+- Testing and debugging display
+
+Upcoming Tasks:
+- Implementing game logic for the board in C, ready for hardware.
+- Create a document detailing visual identity of the game.
+- Creation of a design document for the game's visual identity
+- CAD mockups of RFID assemblies and board
+
+Challenges/Roadblocks:
+- Some team members are having trouble getting the development environment set
+  up. We might need to use x86 machines for this purpose.
+- Not familiar with the OS running on the embedded hardware.
+- Balancing work on the project with work on other classes
