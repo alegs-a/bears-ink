@@ -1,0 +1,33 @@
+Week: 7
+Date: 06/09/24
+
+Completed Tasks:
+- Sketches for piece designs, including a reflection using Nielsen's design
+  heuristics
+- Made some more progress on the RFID readers. We have an idea of what the
+  reading range looks like, and it seems that our idea for raised platforms will
+  work well!
+- Finalising the game board layout.
+- Consideration of different color palletes.
+
+Current Focus:
+- Create a planning document for the
+  visual design and interaction design.
+- Making the RFID readers give helpful feedback to the users and error recovery
+- LCD driver code
+- Write quantum Dracula AI
+- Implementing game logic for the board in C, ready for hardware.
+- Test and refine Dracula AI prototype
+
+Upcoming Tasks:
+- Cardboard prototype of board with sizes
+- CAD mockups of RFID assemblies and board
+- Testing and debugging display
+- Implement Dracula AI logic in C
+
+Challenges/Roadblocks:
+- Balancing work on the project with work on other classes.
+- Y DO TWO PINS HAVE THE SAME NAME :( the documentation for the display kinda
+  sucks as well
+- struggling to get RFID to work on the STM32 (although we have a prototype in
+  arduino)
