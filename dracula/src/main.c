@@ -8,24 +8,31 @@
 #include "display.h"
 #include "dracula.h"
 
-int init()
+int main()
 {
     printk("Hello World\n");
 
-    if (!rfid_init() || !display_init()) {
-        printk("initialisation failed");
+    int error = display_init();
+    if (error) {
+        printk("display init failed with %i\n", error);
     }
 
-    return 0;
-}
+    error = rfid_init();
+    if (error) {
+        printk("rfid init failed with %i\n", error);
+    }
 
-SYS_INIT(init, APPLICATION, 1);
+    if (error) {
+        for (;;) {
+            k_msleep(1000);
+            printk("error\n");
+        }
+    }
 
-int main()
-{
     // Yield to worker threads.
     for (;;) {
         k_msleep(1000);
+        display_clear(0xFF);
     }
 
     return 0;
