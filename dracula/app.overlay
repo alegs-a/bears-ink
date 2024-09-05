@@ -1,9 +1,28 @@
+#include <zephyr/dt-bindings/gpio/gpio.h>
+
 / {
 	aliases {
 		rfid-i2c = &i2c1;
+		display = &spi1;
+	};
+};
+
+&leds {
+	display_dc: display_dc {
+		gpios = <&gpioa 4 GPIO_ACTIVE_HIGH>;
+	};
+	display_reset: display_reset {
+		gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+	};
+	display_cs: display_cs {
+		gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
 	};
 };
 
 &i2c1 {
+	status = "okay";
+};
+
+&spi1 {
 	status = "okay";
 };

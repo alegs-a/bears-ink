@@ -4,9 +4,8 @@
 #include <zephyr/sys/mutex.h>
 #include <zephyr/sys/printk.h>
 
-// Thread instance running the main lissajous thread.
-static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
-    dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
+// static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
+//     dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
 
 // Defined and initialised be the above macro.
 extern const k_tid_t dracula_thread_id;

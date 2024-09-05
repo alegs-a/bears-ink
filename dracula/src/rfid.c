@@ -9,11 +9,11 @@
 #include <zephyr/drivers/i2c.h>
 
 // Thread running the rfid driver.
-static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
-    rfid_main, NULL, NULL, NULL, RFID_THREAD_PRIORITY, 0, 0);
+// static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
+//     rfid_main, NULL, NULL, NULL, RFID_THREAD_PRIORITY, 0, 0);
 
 // Defined and initialised by the above macro.
-extern const k_tid_t rfid_thread_id;
+// extern const k_tid_t rfid_thread_id;
 
 const struct device *const i2c1_dev = DEVICE_DT_GET(DT_ALIAS(rfid_i2c));
 

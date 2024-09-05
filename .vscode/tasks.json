@@ -8,7 +8,7 @@
             "type": "shell",
             "command": "./scripts/build.sh",
             "presentation": {
-                "clear": true
+                "clear": false
             },
             "problemMatcher": []
         },
