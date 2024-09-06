@@ -1,6 +1,10 @@
 #ifndef RFID_H
 #define RFID_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 
 // The stack size of the dracula thread.
@@ -18,5 +22,9 @@ bool rfid_init();
  * @brief The rfid thread handling I/O from rfid readers.
  */
 void rfid_main(void *, void *, void *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // RFID_H
