@@ -1,39 +1,62 @@
-module Game where -- export everything
-
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as Vector
-
-import Board
+module Game(Sunlight(..), GameState(..), Room(..), adjacent) where
 
 
--- Player inventories
-data Inventory = Inventory { stakes :: Int, lights :: Int } deriving Show
-
-
--- NOTE: Assume that a garlic cloud is sufficient (otherwise it is just too many
--- options)
-data PlayerTurn = PlayerTurn
-    { moves :: Vector Room
-    , garlicCloud :: [Room]
-    , inventoryChanges :: Vector Inventory
+data Sunlight = Sunlight
+    { castFrom :: Room
+    , castTo :: Room
     }
 
-data GameState = GameState
-    { positions :: Vector Room
-    , inventories :: Vector Inventory
-    , sunlights :: Vector Room
-    , playerLives :: Int
-    , dracLives :: Int
+data GameState = GameState -- all of the game state that dracula cares about
+    { bitePositions :: [Room]
+    , sunlights :: [Sunlight]
     , canBite :: Bool
     , lastBite :: Int -- the number of turns since the last bite
     , lastInfo :: Int -- the number of turns since players recieved some positive information on Dracula's position
     }
 
 
-instance Semigroup Inventory where
-    i1 <> i2 = Inventory
-        {stakes = stakes i1 + stakes i2
-        , lights = lights i1 + lights i2}
+-- All rooms on the map
+data Room = NHall | Tomb | GuardedWay | Gallery | Alley | BonePit | Entrance
+          | Vent | Dungeon | Dining | Library | Crypt | Passage | Chapel | Nest
+          | Bathroom | Canal | Staircase | Cellar | SHall | Ballroom
+          deriving (Eq, Show)
 
-instance Monoid Inventory where
-    mempty = Inventory {stakes = 0, lights=0}
+
+-- undirected graph of rooms
+adjacenyList :: [(Room, Room)]
+adjacenyList =
+    [ (NHall, Tomb)
+    , (NHall, Entrance)
+    , (Tomb, GuardedWay)
+    , (Tomb, BonePit)
+    , (BonePit, Alley)
+    , (Alley, Gallery)
+    , (Alley, Dungeon)
+    , (Gallery, Ballroom)
+    , (GuardedWay, Gallery)
+    , (Entrance, Vent)
+    , (Entrance, Library)
+    , (Vent, Dungeon)
+    , (Vent, Crypt)
+    , (Dungeon, Dining)
+    , (Dungeon, Bathroom)
+    , (Dining, Ballroom)
+    , (Library, Passage)
+    , (Crypt, Chapel)
+    , (Passage, Chapel)
+    , (Chapel, Nest)
+    , (Nest, Bathroom)
+    , (Bathroom, Canal)
+    , (Canal, Cellar)
+    , (Cellar, Staircase)
+    , (Staircase, Ballroom)
+    , (Cellar, SHall)
+    , (Passage, SHall)
+    ]
+
+
+adjacent :: Room -> [Room]
+adjacent r = firsts ++ seconds
+    where
+        firsts  = snd <$> filter ((== r) . fst) adjacenyList
+        seconds = fst <$> filter ((== r) . snd) adjacenyList

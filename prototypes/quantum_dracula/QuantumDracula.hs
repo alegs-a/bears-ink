@@ -1,18 +1,15 @@
 {-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
 {-# HLINT ignore "Use infix" #-}
+{-# LANGUAGE LambdaCase #-}
 
 module QuantumDracula(DraculaState(..), draculaTurn, isPresent) where
 
-import Data.Vector (Vector, (!))
-import qualified Data.Vector as Vector
 import Control.Monad.Trans.State.Lazy
 import System.Random
 import Control.Monad.Trans.Class (lift)
 import Control.Monad (when)
 
-import Board
-import Game (GameState(..))
-import Text.ParserCombinators.ReadP (between)
+import Game
 
 
 type DraculaState = StateT [Room] IO
@@ -28,7 +25,51 @@ withoutInfo = 4
 --  bites, and collapses the possible rooms into a much smaller set, or
 --  just updates the rooms
 draculaTurn :: GameState -> DraculaState [Room]
-draculaTurn st = undefined -- To bite or not to bite?
+draculaTurn st = do
+    dist <- get
+    threshold <- (/fromIntegral withoutBite) <$> lift stdUnif
+    lift (bestBite st dist) >>= \case
+        Just (bites, score, endRooms) | score <= threshold -> do
+            put endRooms
+            return bites
+        _noBitesOrLowScore -> do
+            let (starting, moves) = turnStarts st dist
+            let inaccessible = bitePositions st ++ (castTo <$> sunlights st)
+            put $ walkEnds inaccessible moves (filter (`notElem` inaccessible) starting)
+            return []
+
+
+-- get the starting rooms for Dracula on his turn
+-- If Dracula is in a room with sunlight, make turnStarts the possible rooms
+-- Dracula could start in AFTER moving out of the sunlight room.
+-- To make this work, additionally return the number of turns Dracula has left
+-- (2 or 3 or 0)
+turnStarts :: GameState -> [Room] -> ([Room], Int)
+turnStarts st dist = case dist of
+    [room] | not . null . dropWhile ((/= room) . castTo) $ sunlights st ->
+        let
+            from = castFrom . head . dropWhile ((/= room) . castTo) $ sunlights st
+            rooms = filter (`notElem` (castTo <$> sunlights st)) $ walkEnds [room] 1 []
+        in
+            if null rooms then ([room], 0) else (rooms, 2)
+    _notInSunlight -> (dist, 3)
+
+
+-- Get the scores for each potential bite, randomly weighting all but the
+-- opportunity to bite more than one player. If no bites are possible, give back
+-- Nothing. Otherwise, give back the rooms to bite in, the (randomly weighted)
+-- score, and the list of good rooms to end the turn in
+bestBite :: GameState -> [Room] -> IO (Maybe ([Room], Float, [Room]))
+bestBite st dist = undefined
+    where
+        inaccessible = bitePositions st ++ (castTo <$> sunlights st)
+
+
+-- Find the length of the shortest path from dist to end.
+shortest :: [Room] -> [Room] -> Room -> Int
+shortest inaccessible dist end
+    | elem end dist = 0
+    | otherwise = 1 + shortest inaccessible (walkEnds inaccessible 1 dist) end
 
 
 -- Necessary properties:
@@ -45,15 +86,10 @@ isPresent st room = do
     if notElem room dist then return False else do
         infoRoll <- lift stdUnif
         biteRoll <- lift stdUnif
-        let biteEnds = Vector.toList $ positions st
-        let biteMoves = 3 * (withoutBite - lastBite st)
-        let bitesInaccessible = Vector.toList (sunlights st) ++ Vector.toList (positions st)
-        let toBite = walkEnds biteEnds biteMoves bitesInaccessible
-        let intersect = intersectSize toBite dist
         let info = fromIntegral (lastInfo st) / fromIntegral (length dist)
-        let bite = fromIntegral (lastBite st * intersect) / fromIntegral (withoutBite * length toBite)
+        let bite = fromIntegral (lastBite st) / fromIntegral withoutBite
         let res = infoRoll <= info && biteRoll <= bite
-        when res $ put (filter (/= room) dist)
+        when res $ put [room]
         return res
 
 
