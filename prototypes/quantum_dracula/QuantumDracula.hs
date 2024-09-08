@@ -1,7 +1,4 @@
-{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
-{-# HLINT ignore "Use infix" #-}
 {-# LANGUAGE LambdaCase #-}
-{-# HLINT ignore "Redundant bracket" #-}
 
 module QuantumDracula(DraculaState, draculaTurn, isPresent) where
 
@@ -29,9 +26,9 @@ withoutInfo = 4
 draculaMoves :: Int
 draculaMoves = 3
 
--- How aggressive should Dracula be?o
-aggressiveness :: Float
-aggressiveness = 1
+-- How passive should Dracula be?
+passiveness :: Float
+passiveness = 1
 
 
 -- Dracula either:
@@ -44,7 +41,7 @@ draculaTurn st = do
     lift (bestBite st dist) >>= \case
         Just (score, bites, endRooms) | score <= threshold -> do
             put endRooms
-            return bites
+            return . unique $ bites -- don't count for multiplicity here
         _noBitesOrLowScore -> do
             let (starting, moves) = turnStarts st dist
             let inaccessible = bitePositions st ++ (castTo <$> sunlights st)
@@ -52,20 +49,21 @@ draculaTurn st = do
             return []
 
 
--- get the starting rooms for Dracula on his turn
+-- Compute the starting distribution for Dracula on his turn and the number of
+-- moves he has remaining to take.
 -- If Dracula is in a room with sunlight, make turnStarts the possible rooms
 -- Dracula could start in AFTER moving out of the sunlight room.
--- To make this work, additionally return the number of turns Dracula has left
--- (2 or 3 or 0)
--- TODO: needs to account for where each sunlight was cast from
 turnStarts :: GameState -> [Room] -> ([Room], Int)
 turnStarts st dist = case dist of
-    [room] | not . null . dropWhile ((/= room) . castTo) $ sunlights st ->
-        let
+    -- Case for in a room with sunlight
+    [room] | not . null . dropWhile (/= room) $ to ->
+        if null validRooms then ([room], 0) else (validRooms, draculaMoves - 1)
+        where
+            to = castTo <$> sunlights st
+            -- The room the sunlight was cast from
             from = castFrom . head . dropWhile ((/= room) . castTo) $ sunlights st
-            rooms = filter (`notElem` (castTo <$> sunlights st)) $ walkEnds [room] 1 []
-        in
-            if null rooms then ([room], 0) else (rooms, draculaMoves - 1)
+            -- Valid moves to take to escape sunlight
+            validRooms = filter (`notElem` (from : to)) $ walkEnds [room] 1 []
     _notInSunlight -> (dist, draculaMoves)
 
 
@@ -99,7 +97,7 @@ bestBite st dist = do
         score :: ([Room], [Room]) -> IO (Float, [Room], [Room])
         score (biteSeq, safe)
             | length biteSeq > 1 = pure (0, biteSeq, safe)
-            | otherwise =  (stdUnif >>= (pure . (, biteSeq, safe)) . (aggressiveness/(fromIntegral . length) safe *))
+            | otherwise = stdUnif >>= (pure . (, biteSeq, safe)) . (passiveness/(fromIntegral . length) safe *)
 
         -- Given a target room to do the next bite in, return the best sequence
         -- of ALL rooms to bite in during the turn (counted with multiplicity)
@@ -116,7 +114,7 @@ bestBite st dist = do
             where
                 -- number of moves after this bite
                 remaining = moves - len
-                len = shortest inaccessible starts biteIn
+                len = shortest inaccessible biteIn starts
                 -- bites so far, counted with multiplicity
                 bitten = multiList ++ alreadyBitten
                 multiList = replicate (length . filter (== biteIn) . bitePositions $ st) biteIn
@@ -131,11 +129,16 @@ bestBite st dist = do
 
 
 -- Find the length of the shortest path from dist to end.
--- TODO: what if no path exists? Make this tail recursive, use draculaMoves
-shortest :: [Room] -> [Room] -> Room -> Int
-shortest inaccessible dist end
-    | elem end dist = 0
-    | otherwise = 1 + shortest inaccessible (walkEnds inaccessible 1 dist) end
+-- If no path exists, or the length of the path is greater than draculaMoves,
+-- return draculaMoves + 1
+-- NOTE: tail recursive => able to terminate if no path exists
+shortest :: [Room] -> Room -> [Room] -> Int
+shortest inaccessible end = shortest' 0
+    where
+        shortest' :: Int -> [Room] -> Int
+        shortest' len dist = if len > draculaMoves || end `elem` dist
+            then len
+            else shortest' (len + 1) (walkEnds inaccessible 1 dist)
 
 
 -- Necessary properties:
@@ -148,7 +151,7 @@ shortest inaccessible dist end
 isPresent :: GameState -> Room -> DraculaState Bool
 isPresent st room = do
     dist <- get
-    if notElem room dist then return False else do
+    if room `notElem` dist then return False else do
         infoRoll <- lift stdUnif
         biteRoll <- lift stdUnif
         let info = fromIntegral (lastInfo st) / fromIntegral (length dist * withoutInfo)
