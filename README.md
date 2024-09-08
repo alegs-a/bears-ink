@@ -25,7 +25,7 @@ microcontroller is an [STM432KC](https://www.st.com/en/microcontrollers-micropro
 ## File Structure
 
 The main code project is located in [`dracula`](/dracula/).
-- The entrypoint to the game logic is located at [dracular/src/main.c](dracula/src/main.c).
+- The entrypoint to the game logic is located at [`dracula/src/main.c`](dracula/src/main.c).
 - The game logic is handled by [`dracula.h` / `dracula.c`](/dracula/src/dracula.h)
 - The display implementation is at [`display.c` / `display.h`](/dracula/src/display.h)
 - The RFID implementation is at [`rfid.c` / `rfid.h`](/dracula/src/rfid.h)
