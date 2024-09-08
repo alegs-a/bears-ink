@@ -1,4 +1,6 @@
-module Game(Sunlight(..), GameState(..), Room(..), adjacent) where
+module Game(Sunlight(..), GameState(..), Room(..), adjacent, allPositions, bitePositions) where
+
+import Data.Either (isRight)
 
 
 data Sunlight = Sunlight
@@ -7,12 +9,25 @@ data Sunlight = Sunlight
     }
 
 data GameState = GameState -- all of the game state that dracula cares about
-    { bitePositions :: [Room]
+    { positions :: [Either Room Room] -- Left if cannot be bitten, Right if can be bitten
     , sunlights :: [Sunlight]
     , canBite :: Bool
     , lastBite :: Int -- the number of turns since the last bite
     , lastInfo :: Int -- the number of turns since players recieved some positive information on Dracula's position
     }
+
+
+bitePositions :: GameState -> [Room]
+bitePositions = map proj . filter isRight . positions
+
+
+allPositions :: GameState -> [Room]
+allPositions = map proj . positions
+
+
+proj :: Either a a -> a
+proj (Left x) = x
+proj (Right x) = x
 
 
 -- All rooms on the map
