@@ -1,7 +1,7 @@
 {-# LANGUAGE LambdaCase #-}
 
 module QuantumDracula
-    ( DraculaState(..)
+    ( DraculaState
     , draculaTurn
     , isPresent
     , turnStarts
@@ -165,9 +165,9 @@ isPresent st room = do
     if room `notElem` dist then return False else do
         infoRoll <- lift stdUnif
         biteRoll <- lift stdUnif
-        let info = fromIntegral (lastInfo st) / fromIntegral (length dist * withoutInfo)
-        let bite = fromIntegral (lastBite st) / fromIntegral withoutBite
-        let res = infoRoll <= info && biteRoll <= bite
+        let infoThreshold = fromIntegral (lastInfo st) / fromIntegral (length dist * withoutInfo)
+        let biteThreshold = fromIntegral (lastBite st) / fromIntegral withoutBite
+        let res = infoRoll <= infoThreshold && biteRoll <= biteThreshold
         when res $ put [room]
         return res
 
