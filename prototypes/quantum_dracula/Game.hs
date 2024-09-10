@@ -12,8 +12,9 @@ data GameState = GameState -- all of the game state that dracula cares about
     { positions :: [Either Room Room] -- Left if cannot be bitten, Right if can be bitten
     , sunlights :: [Sunlight]
     , canBite :: Bool
-    , lastBite :: Int -- the number of turns since the last bite
-    , lastInfo :: Int -- the number of turns since players recieved some positive information on Dracula's position
+    , lastBite :: Int -- the number of rounds since the last bite
+    , lastInfo :: Int -- the number of rounds since players recieved some
+                      -- POSITIVE information on Dracula's position
     }
 
 

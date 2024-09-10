@@ -1,16 +1,27 @@
 {-# LANGUAGE LambdaCase #-}
 
-module QuantumDracula(DraculaState, draculaTurn, isPresent) where
+module QuantumDracula
+    ( DraculaState(..)
+    , draculaTurn
+    , isPresent
+    , turnStarts
+    , bite
+    , shortest
+    , walkEnds
+    , unique
+    , passiveness
+    , draculaMoves
+    ) where
+
+import Game
 
 import Control.Monad.Trans.State.Lazy
 import System.Random
 import Control.Monad.Trans.Class (lift)
-import Control.Monad (when)
+import Control.Monad (when, void)
 import Data.List ((\\), maximumBy)
 import Data.Bifunctor (bimap)
 import Data.Ord (Down(..))
-
-import Game
 import Data.Function (on)
 
 
@@ -38,14 +49,15 @@ draculaTurn :: GameState -> DraculaState [Room]
 draculaTurn st = do
     dist <- get
     threshold <- ((fromIntegral (lastBite st) / fromIntegral withoutBite) *) <$> lift stdUnif
-    lift (bestBite st dist) >>= \case
+    lift (bite st dist) >>= \case
         Just (score, bites, endRooms) | score <= threshold -> do
             put endRooms
             return . unique $ bites -- don't count for multiplicity here
         _noBitesOrLowScore -> do
             let (starting, moves) = turnStarts st dist
             let inaccessible = bitePositions st ++ (castTo <$> sunlights st)
-            put $ walkEnds inaccessible moves (filter (`notElem` inaccessible) starting)
+            -- Don't update dist if Dracula is in sunligh and CANNOT move
+            when (moves /= 0) . void . put $ walkEnds inaccessible moves (filter (`notElem` inaccessible) starting)
             return []
 
 
@@ -71,26 +83,24 @@ turnStarts st dist = case dist of
 -- opportunity to bite more than one player. If no bites are possible, give back
 -- Nothing. Otherwise, give back the (randomly weighted) score, the rooms to
 -- bite in, and the list of good rooms to end the turn in
-bestBite :: GameState -> [Room] -> IO (Maybe (Float, [Room], [Room]))
-bestBite st dist = do
+bite :: GameState -> [Room] -> IO (Maybe (Float, [Room], [Room]))
+bite st dist = do
     scored <- traverse score . filter (not . null . fst) $ possibleBites
     case scored of
         [] -> pure Nothing
         xs -> pure . Just . maximumBy comp $ xs
     where
         -- bites that are actually possible
-        possibleBites = bestBite' numMoves starting [] <$> playerRooms
+        possibleBites = bestBite numMoves starting [] <$> playerRooms
         (starting, numMoves) = turnStarts st dist
         playerRooms = unique . bitePositions $ st
         sunlightRooms = castTo <$> sunlights st
-        inaccessible = playerRooms ++ sunlightRooms
 
         -- return the pair with lex in order snd, reverse order on fst
         comp :: (Float, [Room], [Room]) -> (Float, [Room], [Room]) -> Ordering
         comp (s1, r1, _) (s2, r2, _) = case on compare length r1 r2 of
             EQ -> on compare Down s1 s2
             ord -> ord
-
 
         -- 0 if more than one bite, otherwise rand * 1/(number of safe rooms)
         -- (say 1/0 = 1)
@@ -99,6 +109,7 @@ bestBite st dist = do
             | length biteSeq > 1 = pure (0, biteSeq, safe)
             | otherwise = stdUnif >>= (pure . (, biteSeq, safe)) . (passiveness/(fromIntegral . length) safe *)
 
+
         -- Given a target room to do the next bite in, return the best sequence
         -- of ALL rooms to bite in during the turn (counted with multiplicity)
         -- and the safe rooms to end the turn in
@@ -106,15 +117,15 @@ bestBite st dist = do
         --  (number of players bitten, number of "safe" rooms)
         -- where a room is called "safe" it is at least one space away from any
         -- player who does not miss their next turn
-        bestBite' :: Int -> [Room] -> [Room] -> Room -> ([Room], [Room])
-        bestBite' moves starts alreadyBitten biteIn
+        bestBite :: Int -> [Room] -> [Room] -> Room -> ([Room], [Room])
+        bestBite moves starts alreadyBitten biteIn
             | remaining < 0 = ([], []) -- due to lex order, only need to have last entry empty
             | otherwise = maximumBy (compare `on` bimap length length)
-                $ (bitten, safeRooms) : (bestBite' remaining [biteIn] bitten <$> notBitten)
+                $ (bitten, safeRooms) : (bestBite remaining [biteIn] bitten <$> notBitten)
             where
                 -- number of moves after this bite
                 remaining = moves - len
-                len = shortest inaccessible biteIn starts
+                len = shortest sunlightRooms biteIn starts
                 -- bites so far, counted with multiplicity
                 bitten = multiList ++ alreadyBitten
                 multiList = replicate (length . filter (== biteIn) . bitePositions $ st) biteIn
