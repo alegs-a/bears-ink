@@ -18,28 +18,47 @@
 // The thread priority of the dracula logic.
 #define DISPLAY_THREAD_PRIORITY 5
 
-#define COMMAND_DEFAULT_START_LINE 0x40
-#define COMMAND_SET_MULTIPLEX_RATIO 0xA8
-#define COMMAND_SET_SCAN_DIRECTION 0xC8
-#define COMMAND_SET_SEGMENT_REMAP 0xA1
-#define COMMAND_SET_DISPLAY_OFFSET 0xD3
-#define COMMAND_SET_COM_HARDWARE_CONFIG 0xDA
-#define COMMAND_SET_PRECHARGE_PERIOD 0xD9
-#define COMMAND_SET_CLOCK_RATIO 0xD5
-#define COMMAND_SET_VCOMH_DESELECT_LEVEL 0xDB
-#define COMMAND_SET_CONTRAST 0x81
-#define COMMAND_DISPLAY_ON 0xA4
-#define COMMAND_SET_INVERSION_NORMAL 0xA6
-#define COMMAND_SET_INVERSION_INVERTED 0xA7
-#define COMMAND_SLEEP 0xAE
-#define COMMAND_WAKE 0xAF
-#define COMMAND_SET_IREF 0xAD
-#define COMMAND_SET_CHARGE_PUMP 0x8D
-#define COMMAND_NOP 0xE3
-#define COMMAND_LOCK 0xFD
-#define COMMAND_ADDRESS_MODE 0x20
-#define COMMAND_SET_COLUMN_ADDRESS 0x21
-#define COMMAND_SET_ROW_ADDRESS 0x22
+enum Command {
+    COMMAND_DEFAULT_START_LINE = 0x40,
+    COMMAND_SET_MULTIPLEX_RATIO = 0xA8,
+    COMMAND_SET_SCAN_DESCENDING = 0xC8,
+    COMMAND_SET_SCAN_ASCENDING = 0xC0,
+    COMMAND_SET_COM_NORMAL = 0xC0,
+    COMMAND_SET_SEGMENT_REMAP_OFF = 0xA0,
+    COMMAND_SET_SEGMENT_REMAP_ON = 0xA1,
+    COMMAND_SET_DISPLAY_OFFSET = 0xD3,
+    COMMAND_SET_COM_PIN_HARDWARE_CONFIG = 0xDA,
+    COMMAND_SET_PRECHARGE_PERIOD = 0xD9,
+    COMMAND_SET_CLOCK_RATIO = 0xD5,
+    COMMAND_SET_VCOMH_DESELECT_LEVEL = 0xDB,
+    COMMAND_SET_CONTRAST = 0x81,
+    COMMAND_DISPLAY_ON = 0xA4,
+    COMMAND_SET_INVERSION_NORMAL = 0xA6,
+    COMMAND_SET_INVERSION_INVERTED = 0xA7,
+    COMMAND_SLEEP = 0xAE,
+    COMMAND_WAKE = 0xAF,
+    COMMAND_SET_IREF = 0xAD,
+    COMMAND_SET_CHARGE_PUMP = 0x8D,
+    COMMAND_NOP = 0xE3,
+    COMMAND_LOCK = 0xFD,
+    COMMAND_ADDRESS_MODE = 0x20,
+    COMMAND_SET_COLUMN_ADDRESS = 0x21,
+    COMMAND_SET_ROW_ADDRESS = 0x22,
+    COMMAND_DEACTIVATE_SCROLL = 0x2E
+};
+
+enum AddressMode {
+    ADDRESS_MODE_HORISONTAL = 0b00,
+    ADDRESS_MODE_VERTICAL = 0b01,
+    ADDRESS_MODE_PAGE = 0b10
+};
+
+enum ComPinConfig {
+    COM_PIN_SEQUENTIAL_NO_LR = 0b00000010,
+    COM_PIN_ALTERNATIVE_NO_LR = 0b0001010,
+    COM_PIN_SEQUENTIAL_LR = 0b00010010,
+    COM_PIN_ALTERNATIVE_LR = 0b00011010
+};
 
 // Thread instance running the main lissajous thread.
 // static K_THREAD_DEFINE(display, DISPLAY_THREAD_STACK_SIZE,
@@ -61,7 +80,7 @@ static const struct gpio_dt_spec display_pin_cs = GPIO_DT_SPEC_GET(DT_NODELABEL(
 
 static const struct spi_config spi_configuration = {
     .frequency = 10000000,
-    .operation = SPI_WORD_SET(8),
+    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB,
     .slave = 0,
     .cs = {
         .delay = 0,
@@ -104,9 +123,9 @@ int display_set_write_row_region(uint8_t row_begin, uint8_t row_end);
 
 int display_send(uint8_t *data, int length);
 
-int display_send_command(uint8_t *data, int length);
+int display_command(uint8_t *command, int length);
 
-int display_send_data(uint8_t *data, int length);
+int display_data(uint8_t *data, int length);
 
 /**
  * @brief Turn the display on.
@@ -120,11 +139,6 @@ int display_init()
         printk("display device not ready\n");
         return 1;
     }
-
-    // if (!spi_is_ready_dt(&spi)) {
-    //     printk("display spi not ready\n");
-    //     return false;
-    // }
 
     int error = gpio_pin_configure_dt(&display_pin_reset, GPIO_OUTPUT_ACTIVE);
     if (error) {
@@ -144,51 +158,42 @@ int display_init()
         return error;
     }
 
-    // for (;;) {
-    //     gpio_pin_set_dt(&display_pin_reset, 1);
-    //     k_msleep(500);
-    //     // gpio_pin_set_dt(&display_pin_reset, 0);
-    //     // k_msleep(500);
-    // }
-
-    printk("reseting\n");
     display_reset();
 
-    // unsigned char buffer[] = {
-    //     COMMAND_SLEEP,
-    //     COMMAND_ADDRESS_MODE, 0x0,
-    //     COMMAND_DEFAULT_START_LINE,
-    //     COMMAND_SET_SEGMENT_REMAP,
-    //     COMMAND_SET_MULTIPLEX_RATIO, 63,
-    //     COMMAND_SET_SCAN_DIRECTION,
-    //     COMMAND_SET_DISPLAY_OFFSET, 0,
-    //     COMMAND_SET_COM_HARDWARE_CONFIG, 0x12,
-    //     COMMAND_SET_CLOCK_RATIO, 128,
-    //     COMMAND_SET_PRECHARGE_PERIOD, 0xF1,
-    //     COMMAND_SET_VCOMH_DESELECT_LEVEL, 0x30,
-    //     COMMAND_SET_CONTRAST, 0xFF,
-    //     COMMAND_DISPLAY_ON,
-    //     COMMAND_SET_INVERSION_NORMAL,
-    //     COMMAND_SET_IREF, 0x30,
-    //     COMMAND_SET_CHARGE_PUMP, 0x14,
-    //     COMMAND_WAKE
-    // };
+    unsigned char initialisation[] = {
+        COMMAND_SLEEP,
+        COMMAND_SET_CLOCK_RATIO, 128,
+        COMMAND_SET_MULTIPLEX_RATIO, 63,
+        COMMAND_SET_DISPLAY_OFFSET, 0,
+        COMMAND_DEFAULT_START_LINE,
+        COMMAND_SET_CHARGE_PUMP, 0x14,
+        COMMAND_ADDRESS_MODE, ADDRESS_MODE_HORISONTAL,
+        COMMAND_SET_SEGMENT_REMAP_ON,
+        COMMAND_SET_SCAN_DESCENDING,
+        COMMAND_SET_CONTRAST, 0xCF,
+        COMMAND_SET_COM_NORMAL,
+        COMMAND_SET_COM_PIN_HARDWARE_CONFIG, COM_PIN_SEQUENTIAL_LR,
+        COMMAND_SET_PRECHARGE_PERIOD, 0xF1,
+        COMMAND_SET_VCOMH_DESELECT_LEVEL, 0x40,
+        COMMAND_DISPLAY_ON,
+        COMMAND_SET_INVERSION_NORMAL,
+        COMMAND_SET_IREF, 0x30,
+        COMMAND_DEACTIVATE_SCROLL,
+        COMMAND_WAKE
+    };
 
-    unsigned char buffer[] = {0xAE, 0x20, 0x0, 0x40, 0xA1, 0xA8, 0x3F, 0xC8, 0xD3, 0x0, 0xDA, 0x12, 0xD5, 0x80, 0xD9, 0xF1, 0xDB, 0x30, 0x81, 0xFF, 0xA4, 0xA6, 0xAD, 0x30, 0x8D, 0x14, 0xAF};
-
-    error = display_send_command(buffer, sizeof(buffer));
+    error = display_command(initialisation, sizeof(initialisation));
     if (error) {
         printk("display initialisation sequence failed with %i\n", error);
     }
+
+    k_usleep(1);
 
     return error;
 }
 
 int display_send(uint8_t *data, int length)
 {
-    gpio_pin_set_dt(&display_pin_cs, 0);
-    k_usleep(1);
-
     struct spi_buf buffer = {
         .buf = data,
         .len = length
@@ -207,11 +212,11 @@ int display_send(uint8_t *data, int length)
     return error;
 }
 
-int display_send_command(uint8_t *data, int length)
+int display_command(uint8_t *data, int length)
 {
     printk("display send command ");
     for (int i = 0; i < length; i++) {
-        printk("%x", data[i]);
+        printk("%02x ", data[i]);
     }
     printk("\n");
 
@@ -219,19 +224,19 @@ int display_send_command(uint8_t *data, int length)
     int error = gpio_pin_set_dt(&display_pin_dc, 0);
     if (error)
         return error;
-    
+
     k_usleep(1);
 
     return display_send(data, length);
 }
 
-int display_send_data(uint8_t *data, int length)
+int display_data(uint8_t *data, int length)
 {
-    printk("display send data ");
-    for (int i = 0; i < length; i++) {
-        printk("%x", data[i]);
-    }
-    printk("\n");
+    // printk("display send data ");
+    // for (int i = 0; i < length; i++) {
+    //     printk("%02x", data[i]);
+    // }
+    // printk("\n");
 
     // command high
     int error = gpio_pin_set_dt(&display_pin_dc, 1);
@@ -256,128 +261,63 @@ int display_reset()
 int display_on()
 {
     uint8_t buffer[] = {COMMAND_DISPLAY_ON};
-    return display_send_command(buffer, sizeof(buffer));
+    return display_command(buffer, sizeof(buffer));
 }
 
 void display_clear(unsigned char byte)
 {
-    uint8_t data[1] = {byte};
+    display_set_bounds(0, 0xFF, 0, 8);
 
-    gpio_pin_set_dt(&display_pin_cs, 0);
-    k_usleep(1);
-
-    struct spi_buf buffer = {
-        .buf = data,
-        .len = 1
-    };
-
-    struct spi_buf_set set = {
-        .buffers = &buffer,
-        .count = 1
-    };
-
-    for (int i = 0; i < (DISPLAY_ROW_MAX + 1) * (DISPLAY_COL_MAX + 1); i++) {
-        int error = spi_write(display_device, spi, &set);
-        if (error) {
-            printk("spi failed to write: %i\n", error);
-        }
+    for (int i = 0; i < 1024; i++) {
+        display_data(&byte, 1);
     }
+
+    byte = 0x00;
+    for (int i = 0; i < 3; i++)
+        display_data(&byte, 1);
 }
 
 void display_sleep()
 {
     uint8_t buffer[] = {COMMAND_SLEEP};
-    display_send_command(buffer, sizeof(buffer));
+    display_command(buffer, sizeof(buffer));
 }
 
 void display_wake()
 {
     uint8_t buffer[] = {COMMAND_WAKE};
-    display_send_command(buffer, sizeof(buffer));
+    display_command(buffer, sizeof(buffer));
 }
 
 void display_set_contrast(uint8_t level)
 {
     uint8_t buffer[] = {COMMAND_SET_CONTRAST, level};
-    display_send_command(buffer, sizeof(buffer));
+    display_command(buffer, sizeof(buffer));
 }
 
 void display_invert(bool inverted)
 {
     uint8_t buffer[1] = {inverted ? COMMAND_SET_INVERSION_INVERTED : COMMAND_SET_INVERSION_NORMAL};
-    display_send_command(buffer, sizeof(buffer));
+    display_command(buffer, sizeof(buffer));
 }
 
-void display_address_mode(enum AddressMode mode)
+int display_set_bounds(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
+        uint8_t row_end)
 {
-    if (mode >= 3) {
-        printk("invalid address mode %i\n", mode);
-        return;
-    }
+    uint8_t buffer[] = {
+        COMMAND_SET_ROW_ADDRESS, row_begin, row_end,
+        COMMAND_SET_COLUMN_ADDRESS, column_begin, column_end
+    };
 
-    uint8_t buffer[2] = {COMMAND_ADDRESS_MODE, mode};
-    display_send_command(buffer, sizeof(buffer));
-}
-
-
-int display_set_write_column_region(uint8_t column_begin, uint8_t column_end)
-{
-    if (column_begin > 127) {
-        printk("cannot set row region start greater than 127\n");
-        return EINVAL;
-    }
-
-    if (column_end > 127) {
-        printk("cannot set row region end greater than 127\n");
-        return EINVAL;
-    }
-
-    if (column_end < column_begin) {
-        printk("cannot set row region start greater than row region end\n");
-        return EINVAL;
-    }
-
-    uint8_t buffer[] = {COMMAND_SET_COLUMN_ADDRESS, column_begin, column_end};
-    display_send_command(buffer, sizeof(buffer));
+    display_command(buffer, sizeof(buffer));
 
     return 0;
 }
 
-int display_set_write_row_region(uint8_t row_begin, uint8_t row_end)
+int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
+        uint8_t row_end, uint8_t *data, unsigned int n)
 {
-    if (row_begin > 7) {
-        printk("cannot set row region start greater than 7\n");
-        return EINVAL;
-    }
-
-    if (row_end > 7) {
-        printk("cannot set row region end greater than 7\n");
-        return EINVAL;
-    }
-
-    if (row_end < row_begin) {
-        printk("cannot set row region start greater than row region end\n");
-        return EINVAL;
-    }
-
-    uint8_t buffer[] = {COMMAND_SET_ROW_ADDRESS, row_begin, row_end};
-    display_send_command(buffer, sizeof(buffer));
-
-    return 0;
-}
-
-int display_write(uint8_t row_begin, uint8_t row_end, uint8_t column_begin,
-        uint8_t column_end, uint8_t *data, unsigned int n)
-{
-    int error = display_set_write_column_region(column_begin, column_end);
-    if (error)
-        return error;
-
-    error = display_set_write_row_region(row_begin, row_end);
-    if (error)
-        return error;
-
-    // k_msleep(1000);
-
-    return display_send_data(data, n);
+    display_set_bounds(column_begin, column_end, row_begin, row_end);
+    display_data(data, n);
+    return 1;
 }
