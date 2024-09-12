@@ -239,6 +239,8 @@ int display_init()
 
     k_usleep(1);
 
+    display_clear(0x00);
+
     return error;
 }
 
