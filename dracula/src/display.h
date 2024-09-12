@@ -108,9 +108,4 @@ struct Image {
  */
 int display_image(struct Image *image, unsigned int x, unsigned int y);
 
-/**
- * @brief Simple test routine for the display.
- */
-void display_test();
-
 #endif // DISPLAY_H

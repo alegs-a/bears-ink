@@ -4,6 +4,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 
+#include "font.h"
 #include "rfid.h"
 #include "display.h"
 #include "dracula.h"
@@ -29,7 +30,8 @@ int main()
     //     }
     // }
 
-    display_test();
+    display_clear(0x00);
+    display_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 0, 0);
 
     // Yield to worker threads.
     for (;;) {
