@@ -1,0 +1,23 @@
+Week: 8
+Date: 13/09/24
+
+Completed Tasks:
+- Asynchronous writing to the LCD, including a small character set
+- Quantum Dracula AI and some simple tests
+- RFID library on the STM32
+
+Current Focus:
+- Script to turn PNG files into something we can write to the display
+- Designing what will be written to the display
+- More thorough testing Quantum Dracula AI and write C implementation
+- Code to interface with the RFID library
+- Implementing game logic for the board in C for hardware.
+- Create a planning document for the visual design and interaction design.
+- Making the RFID readers give helpful feedback to the users and error recovery
+
+Upcoming Tasks:
+- CAD design for the board
+- LED strips
+
+Challenges/Roadblocks:
+- Balancing work on the project with work on other classes.
