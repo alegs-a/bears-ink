@@ -1,6 +1,7 @@
 module Game(Sunlight(..), GameState(..), Room(..), adjacent, allPositions, bitePositions) where
 
 import Data.Either (isRight)
+import Test.QuickCheck.Arbitrary
 
 
 data Sunlight = Sunlight
@@ -14,7 +15,6 @@ data GameState = GameState -- all of the game state that dracula cares about
     , canBite :: Bool
     , lastBite :: Int -- the number of rounds since the last bite
     , lastInfo :: Int -- the number of rounds since players recieved some
-                      -- POSITIVE information on Dracula's position
     }
 
 
@@ -35,7 +35,10 @@ proj (Right x) = x
 data Room = NHall | Tomb | GuardedWay | Gallery | Alley | BonePit | Entrance
           | Vent | Dungeon | Dining | Library | Crypt | Passage | Chapel | Nest
           | Bathroom | Canal | Staircase | Cellar | SHall | Ballroom
-          deriving (Eq, Show)
+          deriving (Eq, Show, Enum)
+
+instance Arbitrary Room where
+    arbitrary = toEnum . (`mod` 21) <$> arbitrary
 
 
 -- undirected graph of rooms

@@ -107,7 +107,9 @@ bite st dist = do
         score :: ([Room], [Room]) -> IO (Float, [Room], [Room])
         score (biteSeq, safe)
             | length biteSeq > 1 = pure (0, biteSeq, safe)
-            | otherwise = stdUnif >>= (pure . (, biteSeq, safe)) . (passiveness/(fromIntegral . length) safe *)
+            | otherwise = stdUnif
+                >>= (pure . (, biteSeq, safe))
+                    . (passiveness/(fromIntegral . length) safe *)
 
 
         -- Given a target room to do the next bite in, return the best sequence
@@ -168,7 +170,7 @@ isPresent st room = do
         let infoThreshold = fromIntegral (lastInfo st) / fromIntegral (length dist * withoutInfo)
         let biteThreshold = fromIntegral (lastBite st) / fromIntegral withoutBite
         let res = infoRoll <= infoThreshold && biteRoll <= biteThreshold
-        when res $ put [room]
+        if res then put [room] else modify $ filter (/= room)
         return res
 
 

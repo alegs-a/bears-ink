@@ -29,19 +29,23 @@ scenario1 = scenarioResults (draculaTurn st1) dist1
             }
 
 
--- For me, it seems that the best bite is in SHall and the worst place to bite
--- is in Gallery
-scenario2 :: Int -> IO [(Room, Int)]
-scenario2 = scenarioResults (draculaTurn st) dist
+-- For me, it seems that the best bite is in SHall
+scenario2 :: Int -> Int -> IO [(Room, Int)]
+scenario2 lastBiteTurns = scenarioResults (draculaTurn st) dist
     where
         dist = [ Dungeon, Dining, Bathroom, Vent, Canal ]
         st = GameState
             { sunlights = [ Sunlight {castTo = Alley, castFrom = Gallery} ]
             , positions = Right <$> [ Gallery, Staircase, Tomb, SHall ]
             , lastInfo = 2
-            , lastBite = 2
+            , lastBite = lastBiteTurns
             , canBite = True
             }
+
+
+-- ran this and got [391,624,726,818,854]
+scenario2Summary :: IO [Int]
+scenario2Summary = traverse (fmap (sum . map snd) . flip scenario2 1000) [1..5]
 
 
 -- Turn immediately after doing a bite in SHall in scenario2. Dracula should
@@ -75,7 +79,6 @@ scenario4 = scenarioResults (pure <$> isPresent st SHall) dist
 
 -- Run the ai `run` `n` times (with initial dracula state `dist`) and return a
 -- collation of the results
--- TODO: get this to do some sorting
 scenarioResults :: Eq a => DraculaState [a] -> [Room] -> Int -> IO [(a, Int)]
 scenarioResults run dist n = sortBy (compare `on` (Down . snd))
     <$>  execStateT (replicateM n singleScenario) []
