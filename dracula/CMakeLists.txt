@@ -6,4 +6,5 @@ project(bearsink)
 add_compile_options(-Wall -Werror)
 
 file(GLOB_RECURSE SOURCE "*.c")
+file(GLOB_RECURSE SOURCE "*.cpp")
 target_sources(app PRIVATE ${SOURCE})

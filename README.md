@@ -28,7 +28,8 @@ The main code project is located in [`dracula`](/dracula/).
 - The entrypoint to the game logic is located at [`dracula/src/main.c`](dracula/src/main.c).
 - The game logic is handled by [`dracula.h` / `dracula.c`](/dracula/src/dracula.h)
 - The display implementation is at [`display.c` / `display.h`](/dracula/src/display.h)
-- The RFID implementation is at [`rfid.c` / `rfid.h`](/dracula/src/rfid.h)
+- The RFID implementation is at [`rfid.cpp` / `rfid.h`](/dracula/src/rfid.cpp)
+  - The RFID library at [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from <https://github.com/arozcan/MFRC522-I2C-Library>, and has been adapted to use Zephyr APIs
 
 Additionally, prototypes for the game logic and the AI may be found in [`prototypes`](/prototypes/)
 
