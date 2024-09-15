@@ -110,7 +110,7 @@ void rfid_main(void *, void *, void *)
     if ((v == 0x00) || (v == 0xFF)) {
         printk("WARNING: Communication failure, is the MFRC522 properly connected?\n");
     }
-    mfrc522.PCD_SetAntennaGain(0x70);
+    mfrc522.PCD_SetAntennaGain(0x50);
     byte gain = mfrc522.PCD_GetAntennaGain();
     printk("Antenna gain: 0x%x\n", gain);
     for (;;) {
