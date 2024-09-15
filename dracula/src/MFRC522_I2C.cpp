@@ -9,6 +9,8 @@
 
 #include <zephyr/kernel.h>
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/sys/printk.h>
+
 const struct device *const i2c1_dev = DEVICE_DT_GET(DT_ALIAS(rfid_i2c));
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -877,7 +879,7 @@ byte MFRC522::MIFARE_Write(	byte blockAddr, ///< MIFARE Classic: The block (0-0x
  * @return STATUS_OK on success, STATUS_??? otherwise.
  */
 byte MFRC522::MIFARE_Ultralight_Write(	byte page, 		///< The page (2-15) to write to.
-										byte *buffer,	///< The 4 bytes to write to the PICC
+										const byte *buffer,	///< The 4 bytes to write to the PICC
 										byte bufferSize	///< Buffer size, must be at least 4 bytes. Exactly 4 bytes are written.
 									) {
 	byte result;
@@ -1385,20 +1387,33 @@ void MFRC522::PICC_DumpMifareUltralightToSerial() {
 	byte buffer[18];
 	byte i;
 
+	printk("Page  0  1  2  3\n");
 	// Try the mpages of the original Ultralight. Ultralight C has more pages.
 	for (byte page = 0; page < 16; page +=4) { // Read returns data for 4 pages at a time.
 		// Read pages
 		byteCount = sizeof(buffer);
 		status = MIFARE_Read(page, buffer, &byteCount);
 		if (status != STATUS_OK) {
+			printk("MIFARE_Read() failed: %s\n", GetStatusCodeName(status));
 			break;
 		}
 		// Dump data
 		for (byte offset = 0; offset < 4; offset++) {
 			i = page + offset;
+			printk("  %2d  ", i);
 			for (byte index = 0; index < 4; index++) {
 				i = 4 * offset + index;
+				printk("%02x ", buffer[i]);
 			}
+			for (byte index = 0; index < 4; index++) {
+				i = 4 * offset + index;
+				if (0x20 <= buffer[i] && buffer[i] < 0x7f) {
+					printk("%c", buffer[i]);
+				} else {
+					printk("�");
+				}
+			}
+			printk("\n");
 		}
 	}
 } // End PICC_DumpMifareUltralightToSerial()

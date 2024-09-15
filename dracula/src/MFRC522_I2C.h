@@ -370,7 +370,7 @@ public:
 	byte MIFARE_Increment(byte blockAddr, long delta);
 	byte MIFARE_Restore(byte blockAddr);
 	byte MIFARE_Transfer(byte blockAddr);
-	byte MIFARE_Ultralight_Write(byte page, byte *buffer, byte bufferSize);
+	byte MIFARE_Ultralight_Write(byte page, const byte *buffer, byte bufferSize);
 	byte MIFARE_GetValue(byte blockAddr, long *value);
 	byte MIFARE_SetValue(byte blockAddr, long value);
 

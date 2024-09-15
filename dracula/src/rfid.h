@@ -13,6 +13,21 @@ extern "C" {
 // The thread priority of the dracula logic.
 #define RFID_THREAD_PRIORITY 5
 
+enum TokenKind {
+    Player1,
+    Player2,
+    Player3,
+    Player4,
+    Garlic,
+    Sunlight,
+    HolyWater,
+};
+
+struct DraculaToken {
+    unsigned char uid[7];
+    enum TokenKind kind;
+};
+
 /**
  * @brief Initialise the rfid driver.
  */
