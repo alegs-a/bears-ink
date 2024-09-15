@@ -1,5 +1,4 @@
 #include <stddef.h>
-#include <stdbool.h>
 
 
 
@@ -75,8 +74,16 @@ struct RoomBuffer {
 void add_no_duplicate(struct RoomBuffer *const buff, const Room room);
 
 /*
- * Return if the given room is contained in the room buffer.
+ * Return the index of the given room in the room buffer. If it is not in the
+ * buffer, return -1.
  *
  * This function has NO side effects
  */
-bool contains_room(const struct RoomBuffer buff, const Room room);
+int contains_room(const struct RoomBuffer buff, const Room room);
+
+/*
+ * Create a new room buffer that is a copy of buff. So that the memory of the
+ * new buffer is disjoint to that of buff, pass in an array arr that can be
+ * used as the rooms array in the room buffer, and copy the values over.
+ */
+struct RoomBuffer room_buffer_copy(const struct RoomBuffer buff, Room *const arr);
