@@ -1,5 +1,4 @@
 #include "room.h"
-#include <cstring>
 #include <stdbool.h>
 #include <string.h>
 

@@ -13,6 +13,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 
+#define NUM_PLAYERS 4 // the number of players in the game.
 #define PASSIVENESS 2 // Generally just controls likelihoods for detection and
                       // bites
 
@@ -46,16 +47,6 @@ struct GameState {
     // i of sunlights_from.
     struct RoomBuffer sunlights_to;
     struct RoomBuffer sunlights_from;
-
-    // true iff Dracula can bite a player on this turn
-    bool can_bite;
-
-    // number of rounds since the last time Dracula bit a player
-    int last_bite;
-
-    // number of rounds since the last players received POSITIVE information on
-    // Dracula's position
-    int last_info;
 };
 #endif
 

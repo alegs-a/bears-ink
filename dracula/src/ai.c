@@ -1,10 +1,16 @@
 #include "ai.h"
 #include "room.h"
-#include <string.h>
+#include <stdbool.h>
 
 
-// Globals for Dracula's state
-static Room dracula_rooms[NUM_ROOMS];
+// true iff Dracula can bite a player on this turn
+static bool can_bite = true;
+// number of rounds since the last time Dracula bit a player
+static int last_bite = 0; // needs to start at 0 for algos to work
+// number of rounds since the last players received POSITIVE information on Dracula's position
+static int last_info = 0; // Players know Dracula's starting position
+// Distribution of rooms where Dracula could be
+static Room dracula_rooms[NUM_ROOMS]; // allocate on the stack
 // TODO: set up the rooms buffer and initialize dracula_rooms here
 // *dracula_rooms = DUNGEON;
 static struct RoomBuffer dracula_state = { .rooms = dracula_rooms, .length = 1 };
@@ -87,5 +93,35 @@ static int turn_starts(struct GameState st) {
     // Dracula is not in any room with sunlight
     if (dracula_state.length > 1 || sunlight_index < 0) return DRACULA_MOVES;
 
-    walk_ends(st.sunlights_to, 1, &dracula_state); // NOTE: could contain the room of the player casting the sunlight
+    Room buf[NUM_PLAYERS + 1];
+    struct RoomBuffer innaccessible = room_buffer_copy(st.sunlights_to, buf);
+    add_no_duplicate(&innaccessible, st.sunlights_from.rooms[sunlight_index]);
+    walk_ends(innaccessible, 1, &dracula_state);
+
+    // Dracula successfully moved out of the sunlight room
+    if (dracula_state.length > 1 || sunlight_index < 0) return DRACULA_MOVES - 1;
+
+    // No way to escape.
+    return 0;
+}
+
+
+/*
+ * Given that Dracula MUST bite the player in bite_in before any other players
+ * (if it is possible), find the best sequence of players to bite.
+ *
+ * num_moves - the number of moves that Dracula has
+ * start - the rooms to start the turn in
+ * bite_in - the room to bite a player in to start
+ * bites - the buffer containing the bites so far, and to store the next bites
+ * ending_distribution - the buffer to store the "safe" rooms to end the turn in
+ */
+static void best_bite(
+        int num_moves,
+        const struct RoomBuffer start,
+        Room bite_in,
+        struct RoomBuffer *const bites,
+        struct RoomBuffer *const ending_distribution
+        ) {
+
 }
