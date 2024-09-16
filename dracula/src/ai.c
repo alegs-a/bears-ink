@@ -3,8 +3,6 @@
 #include <stdbool.h>
 
 
-// true iff Dracula can bite a player on this turn
-static bool can_bite = true;
 // number of rounds since the last time Dracula bit a player
 static int last_bite = 0; // needs to start at 0 for algos to work
 // number of rounds since the last players received POSITIVE information on Dracula's position
