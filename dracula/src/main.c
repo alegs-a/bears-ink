@@ -10,7 +10,7 @@
 
 int main()
 {
-    printk("Hello World\n");
+    printk("Dracula!\n");
 
     int error = display_init();
     if (error) {
@@ -22,17 +22,11 @@ int main()
         printk("rfid init failed with %i\n", error);
     }
 
-    if (error) {
-        for (;;) {
-            k_msleep(1000);
-            printk("error\n");
-        }
-    }
+    display_test();
 
     // Yield to worker threads.
     for (;;) {
         k_msleep(1000);
-        display_clear(0xFF);
     }
 
     return 0;

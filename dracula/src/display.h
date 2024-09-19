@@ -4,43 +4,30 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define DISPLAY_ROW_MIN 0
-#define DISPLAY_ROW_MAX 7
-#define DISPLAY_COL_MIN 0
-#define DISPLAY_COL_MAX 127
+// The pin configuration is the following:
+// - Data In (Blue) -> PA_7 (pin A6) configured as SPI1_MOSI
+// - Clock (Yellow) -> PA_1 (pin A1) configured as SPI1_SCK
+// - Chip Select (Orange) -> PB_0 (pin D3) configured as SPI_NSS (logical not slave select)
+// - Data Command (Green) -> PA_4 (pin A3) configured as GPIO
+// - Reset (White) -> PA_0 (pin A0) configured as GPIO
 
-/**
- * @brief The policy the display uses to increment its write pointer.
- * 
- * The display is divided into 8 rows with 128 columns each, and each row is 8
- * pixels tall (with the display being 64px high and 128px wide). Each byte
- * written to the display updates column of 8 pixels at position (row, column).
- * 
- * Each byte written represents a column of 8 pixels. The display has 8 rows.
- */
-enum AddressMode {
+// The width of the display in pixels.
+#define DISPLAY_WIDTH 128
 
-    // Write data along the row and wrap to the same row.
-    ADDRESS_PAGE,
+// THe height of the display in pixels. Divided into 8 rows.
+#define DISPLAY_HEIGHT 64
 
-    // Write data along the row and wrap to the next row.
-    ADDRESS_VERTICAL,
+// The stack size of the dracula thread.
+#define DISPLAY_THREAD_STACK_SIZE 2048
 
-    // Write data along the column and wrap to the next column.
-    ADDRESS_HORIZONTAL
-};
+// The thread priority of the dracula logic.
+#define DISPLAY_THREAD_PRIORITY 5
 
 /**
  * @brief Initialises the display driver.
  * @returns Zero if the display driver initialised successfully.
  */
 int display_init();
-
-/**
- * @brief Reset the display.
- * @returns Zero on success or an error number of failure.
- */
-int display_reset();
 
 /**
  * @brief Make the display sleep.
@@ -53,22 +40,10 @@ void display_sleep();
 void display_wake();
 
 /**
- * @brief Set the display contrast level.
- * @param level From 0 for lowest constrast to 255 for highest constrast.
- */
-void display_set_constrast(uint8_t level);
-
-/**
  * @brief Invert all the pixels on the display.
  * @param inverted If the pixels are inverted.
  */
 void display_invert(bool inverted);
-
-/**
- * @brief Set the address mode of the display.
- * @param mode The display address mode to use.
- */
-void display_address_mode(enum AddressMode mode);
 
 /**
  * @brief Clear the display.
@@ -77,18 +52,60 @@ void display_address_mode(enum AddressMode mode);
 void display_clear(unsigned char data);
 
 /**
+ * @brief Set the contrast of the display.
+ * 
+ * @param level The contrast level from 0 to 255.
+ */
+void display_set_contrast(uint8_t level);
+
+/**
  * @brief Write pixel data to the display.
  * 
  * The display has 8 rows. Each row has 128 columns. Each row is 8 pixels tall.
  * Each of the 8 bits in a byte written to the display sets the 8 pixel states
  * from LSB to MSH at a given row and column.
  * 
- * @param row_begin The first row to write to, from 0 to 7.
- * @param column_begin The forst column to write to from 0 to 127.
- * @param n The number of bytes to write.
+ * @param column_begin The starting column from 0 to 127 inclusive.
+ * @param column_end The end column from 0 to 127 inclusive.
+ * @param row_begin The starting row from 0 to 7 inclusive.
+ * @param row_end The end row from 0 to 7 inclusive.
  * @param data Pointer to the buffer to write.
+ * @param n The number of bytes to write.
+ * 
+ * @returns Zero on success or a non-zero error number on failure.
  */
-int display_write(uint8_t row_begin, uint8_t row_end, uint8_t column_begin,
-        uint8_t column_end, uint8_t *data, unsigned int n);
+int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
+        uint8_t row_end, uint8_t *data, unsigned int n);
+
+/**
+ * @brief A structure containing an image to display.
+ */
+struct Image {
+
+    /// The width of the display image.
+    unsigned char width;
+
+    /// The height of the display image.
+    unsigned char height;
+
+    /// The size of the image data buffer.
+    unsigned int size;
+
+    /// The image data buffer.
+    unsigned char *buffer;
+};
+
+/**
+ * @brief Display an image.
+ * 
+ * @note This function is asynchronous.
+ * 
+ * @param image The image to display.
+ * @param x The x coordinate of the image.
+ * @param y The y coordinate of the image.
+ * 
+ * @returns Zero on success or a non-zero error number on failure.
+ */
+int display_image(struct Image *image, unsigned int x, unsigned int y);
 
 #endif // DISPLAY_H
