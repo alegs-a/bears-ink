@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "ms-vscode.cpptools",
+        "ms-vscode-remote.remote-containers",
+        "stkb.rewrap",
+        "ms-python.python",
+        "twxs.cmake",
+        "cschlosser.doxdocgen",
+        "mhutchie.git-graph",
+        "ms-vscode-remote.remote-wsl"
+    ]
+}
