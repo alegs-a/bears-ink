@@ -10,7 +10,13 @@ if len(sys.argv) < 2:
 _, filename = sys.argv
 
 filepath = pathlib.Path(filename)
-image = Image.open(filepath)
+
+image = None
+try:
+    image = Image.open(filepath)
+except Exception as err:
+    print(f'Failed to open PNG file at {filepath}: {err}')
+    exit(1)
 
 x, y = image.size
 
