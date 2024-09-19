@@ -4,6 +4,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/init.h>
 
+#include "ui.h"
+#include "font.h"
 #include "rfid.h"
 #include "display.h"
 #include "dracula.h"
@@ -22,7 +24,9 @@ int main()
         printk("rfid init failed with %i\n", error);
     }
 
-    display_test();
+    display_clear(0x00);
+    ui_splash();
+    // display_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 0, 0);
 
     // Yield to worker threads.
     for (;;) {
