@@ -90,8 +90,9 @@ rather use another development environment such as vim. To run a task, press
 ## Connecting the Board
 
 The development board pins can be seen below:
+
 <center>
-<img src="docs/board/pinout.jpg" width="500">
+  <img src="docs/board/pinout.jpg" width="500">
 </center>
 
 > [!note]
@@ -99,19 +100,16 @@ The development board pins can be seen below:
 
 Connect the following:
 - Display
-  <center>
 
-  | Wire Colour | Display Function | Port | Configured As | Board Pin |
-  | ----------- | ---------------- | ---- | ------------- | --------- |
-  | Blue        | Data In          | PA7  | SPI1 MOSI     | A6        |
-  | Yellow      | Clock            | PA1  | SPI SCK       | A1        |
-  | Orange      | Chip Select      | PB0  | SPI_NSS       | D3        |
-  | Green       | Data / Command   | PA4  | GPIO          | A3        |
-  | White       | Reset            | PA0  | GPIO          | A0        |
-  | Red         | Power            | -    | 3.3V          | Vin       |
-  | Black       | Ground           | -    | 0V            | GND       |
-
-  </center>
+| Wire Colour | Display Function | Port | Configured As | Board Pin |
+| ----------- | ---------------- | ---- | ------------- | --------- |
+| Blue        | Data In          | PA7  | SPI1 MOSI     | A6        |
+| Yellow      | Clock            | PA1  | SPI SCK       | A1        |
+| Orange      | Chip Select      | PB0  | SPI_NSS       | D3        |
+| Green       | Data / Command   | PA4  | GPIO          | A3        |
+| White       | Reset            | PA0  | GPIO          | A0        |
+| Red         | Power            | -    | 3.3V          | Vin       |
+| Black       | Ground           | -    | 0V            | GND       |
 
 ## Project Overview
 
