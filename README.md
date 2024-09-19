@@ -66,6 +66,7 @@ corresponding [/.devcontainer/dockerfile](/.devcontainer/dockerfile), and may
 take up to 30 minutes to complete depending on download speed. Once completed,
 the folder will reopen in the development environment.
 
+
 ## Building & Flashing
 
 This project is built using the
@@ -85,6 +86,32 @@ rather use another development environment such as vim. To run a task, press
 - To build the project, run the `"Build"` task.
 - To clean the build, run the `"Clean"` task.
 - To flash a built project to the microcontroller, run the `"Flash"` task.
+
+## Connecting the Board
+
+The development board pins can be seen below:
+<center>
+<img src="docs/board/pinout.jpg" width="500">
+</center>
+
+> [!note]
+> The black button opposite the micro USB port is the reset button.
+
+Connect the following:
+- Display
+  <center>
+
+  | Wire Colour | Display Function | Port | Configured As | Board Pin |
+  | ----------- | ---------------- | ---- | ------------- | --------- |
+  | Blue        | Data In          | PA7  | SPI1 MOSI     | A6        |
+  | Yellow      | Clock            | PA1  | SPI SCK       | A1        |
+  | Orange      | Chip Select      | PB0  | SPI_NSS       | D3        |
+  | Green       | Data / Command   | PA4  | GPIO          | A3        |
+  | White       | Reset            | PA0  | GPIO          | A0        |
+  | Red         | Power            | -    | 3.3V          | Vin       |
+  | Black       | Ground           | -    | 0V            | GND       |
+
+  </center>
 
 ## Project Overview
 
