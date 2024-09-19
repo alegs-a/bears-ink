@@ -76,12 +76,12 @@ layer for interfacing with the microcontroller, it also provides building and
 flashing utilities. In this project, building, flashing and other repetitive
 tasks are automated using [VSCode
 tasks](https://code.visualstudio.com/Docs/editor/tasks). All the tasks are
-defined in the [/.vscode/tasks.json](/.vscode/tasks.json), and require the
+defined in the [/.vscode/tasks.json](/.vscode/tasks.json) and require the
 project to be opened the devcontainer. Note that these tasks call scripts under
-[`/scripts`](scripts) that can be run from a command line. This is to support
-development for developers that have a local Zephyr installation and would
-rather use another development environment such as vim. To run a task, press
-`F1`, type `"Tasks: Run Task"` and select one from the drop down list.
+[`/scripts`](scripts) that can be run from a command line to support developers
+that have a local Zephyr installation and would rather use another environment
+such as vim. To run a task, press `F1`, type `"Tasks: Run Task"` and select one
+from the drop down list.
 
 - To build the project, run the `"Build"` task.
 - To clean the build, run the `"Clean"` task.
@@ -114,14 +114,23 @@ Connect the following:
 ## Project Overview
 
 In Dracula, there five top level components:
-- **RFID Sensors** - The driver provides the information about each sensor
-  and any tokens placed on top of them.
+- **RFID Sensors** - The driver provides the information about each sensor and
+  any tokens placed on top of them. This is implemented at [`rfid.cpp` /
+  `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
+  [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from
+  [here](https://github.com/arozcan/MFRC522-I2C-Library) and has been adapted to
+  use Zephyr APIs.
 - **LED Strip** - Used to display user.
 - **OLED Display** - Provides complex information to the users and information
-  unable to be conveyed by the LEDs or through game mechanics.
+  unable to be conveyed by the LEDs or through game mechanics. Implemented by
+  [`display.c` / `display.h`](/dracula/src/display.h).
 - **Dracula AI** - Determines the move that Dracula makes.
 - **Game Logic** - Combines the other components together with game logic
-  including condition checks and logical game flow.
+  including condition checks and logical game flow. Implemented by [`dracula.h`
+  / `dracula.c`](/dracula/src/dracula.h).
+
+The entrypoint to the game logic is located at
+[`dracula/src/main.c`](dracula/src/main.c).
 
 ```mermaid
 ---
@@ -134,7 +143,7 @@ classDiagram
   Dracula <|-- RFID
   Dracula <|-- LEDStrip
   class UI {
-    ui_splash();
+    ui_splash()
   }
   class Display {
     display_write()
@@ -157,20 +166,13 @@ flowchart
   Check -->|No|
 ```
 
-## File Structure
-
-The main code project is located in [`dracula`](/dracula/).
-- The entrypoint to the game logic is located at [`dracula/src/main.c`](dracula/src/main.c).
-- The game logic is handled by [`dracula.h` / `dracula.c`](/dracula/src/dracula.h)
-- The display implementation is at [`display.c` / `display.h`](/dracula/src/display.h)
-- The RFID implementation is at [`rfid.cpp` / `rfid.h`](/dracula/src/rfid.cpp)
-  - The RFID library at [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from <https://github.com/arozcan/MFRC522-I2C-Library>, and has been adapted to use Zephyr APIs
-
-Additionally, prototypes for the game logic and the AI may be found in [`prototypes`](/prototypes/)
+## Repository Structure
 
 ## Using the Display
 
 ## Also See
 
+- Prototypes for the game logic and the AI may be found in
+  [`prototypes`](/prototypes/)
 - [Weekly Notes](/docs/notes/)
 - [Github Wiki](https://github.com/alegs-a/bears-ink/wiki)
