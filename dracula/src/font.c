@@ -372,3 +372,4 @@ int display_string(const char *string, unsigned int x, unsigned int y)
 
     return 0;
 }
+

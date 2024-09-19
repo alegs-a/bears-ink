@@ -54,6 +54,6 @@ struct Image image_dracula = {
 
 void ui_splash()
 {
-    display_invert(true);
+    // display_invert(true);
     display_image(&image_dracula, 20, 2);
 }
