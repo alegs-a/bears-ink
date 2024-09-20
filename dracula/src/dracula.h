@@ -2,6 +2,8 @@
 #define DRACULA_H
 
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdint.h>
 
 // The stack size of the dracula thread.
 #define DRACULA_THREAD_STACK_SIZE 2048
