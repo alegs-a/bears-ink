@@ -1,4 +1,5 @@
 #include "rfid.h"
+#include "room.h"
 #include "MFRC522_I2C.h"
 
 #include <string.h>
@@ -19,6 +20,29 @@ static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
 extern const k_tid_t rfid_thread_id;
 
 MFRC522 mfrc522(0x2c, 3 /* Reset pin */);
+
+struct DraculaToken {
+    enum RoomName room = MAXIMUM_ROOM;
+    unsigned char uid[7];
+    enum TokenKind kind;
+};
+
+#define MAX_TOKENS 64
+
+K_MUTEX_DEFINE(tokensMutex);
+
+/**
+ * @brief A list of the tokens currently on readers.
+ *
+ * This list is used primarily for internal tracking. When new tokens are
+ * detected, they are appended to this list and a callback is fired to the game
+ * logic. The game logic can also copy this list out with an rfid_ function.
+ *
+ * Empty entries are marked with a room name of MAXIMUM_ROOM.
+ *
+ * This list is protected by tokensMutex
+ */
+DraculaToken currentTokens[MAX_TOKENS];
 
 bool rfid_init()
 {
@@ -109,8 +133,58 @@ void detect_new_card()
         return;
     }
 
-    // We've found a valid token
+    // We've found a valid token; add it to currentTokens
+    k_mutex_lock(&tokensMutex, K_FOREVER);
+    for (int i = 0; i < MAX_TOKENS; i++) {
+        if (currentTokens[i].room != MAXIMUM_ROOM) {
+            // This entry is occupied.
+            continue;
+        }
+
+        currentTokens[i].room = NHALL;
+        currentTokens[i].kind = token_kind;
+        memcpy(currentTokens[i].uid, mfrc522.uid.uidByte, 7);
+        break;
+    }
+    k_mutex_unlock(&tokensMutex);
+
+    // Halt the token. We can wake it up later when we want to check its presence.
     mfrc522.PICC_HaltA();
+}
+
+/**
+ * @brief Check all the tokens in currentTokens to see if they're still there
+ *
+ * Takes tokensMutex internally and removes non-present tokens.
+ */
+void detect_current_cards()
+{
+    k_mutex_lock(&tokensMutex, K_FOREVER);
+    for (int i = 0; i < MAX_TOKENS; i++) {
+        if (currentTokens[i].room == MAXIMUM_ROOM) {
+            // Empty list entry; ignore.
+            continue;
+        }
+
+        mfrc522.uid.size = 7;
+        mfrc522.uid.sak = 0;
+        memcpy(mfrc522.uid.uidByte, currentTokens[i].uid, 7);
+
+        // Wake up all the tokens on this reader
+        byte bufferATQA[2];
+        byte bufferSize = sizeof(bufferATQA);
+        byte result = mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
+
+        // Select the token we're working with currently
+        // FIXME: This currently does not support multiple tags on the same reader
+        result = mfrc522.PICC_Select(&mfrc522.uid);
+        if (result == MFRC522::STATUS_TIMEOUT) {
+            // This token probably disappeared; forget about it
+            printk("Token %d removed. (%d)\n", currentTokens[i].kind, result);
+            currentTokens[i].room = MAXIMUM_ROOM;
+        }
+    }
+    k_mutex_unlock(&tokensMutex);
 }
 
 void rfid_main(void *, void *, void *)
@@ -127,5 +201,6 @@ void rfid_main(void *, void *, void *)
     printk("Antenna gain: 0x%x\n", gain);
     for (;;) {
         detect_new_card();
+        detect_current_cards();
     }
 }
