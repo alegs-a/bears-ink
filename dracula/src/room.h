@@ -34,7 +34,8 @@ enum RoomName {
     STAIRCASE,
     CELLAR,
     SHALL,
-    BALLROOM
+    BALLROOM,
+    MAXIMUM_ROOM
 };
 
 // Room type. Prefer to pass this around over room names so that we can use the

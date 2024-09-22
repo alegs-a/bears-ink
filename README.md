@@ -16,7 +16,7 @@ Contents:
 1. [Dracula](#Dracula)
 2. [Development Environment](#2-development-environment)
 3. [Building & Flashing](#3-building--flashing)
-4. [Hardware](#4-hardware)
+4. [Hardware & BOM](#4-hardware--bom)
 5. [Connecting the Board](#5-connecting-the-board)
 6. [Project Overview](#6-project-overview)
 7. [Repository Structure](#7-repository-structure)
@@ -98,32 +98,36 @@ from the drop down list.
 - To clean the build, run the `"Clean"` task.
 - To flash a built project to the microcontroller, run the `"Flash"` task.
 
-## 4. Hardware
+## 4. Hardware & BOM
+
+The full bill of materials for the electronics is as follows:
+
+| Component                                | Link                                                                                                                          | #   | Individual Cost                                                                                                                                         | Total Cost |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | --- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| Microcontroller                          | [Nucleo-L432KC](https://www.st.com/en/evaluation-tools/nucleo-l432kc.html)                                                    | 1   | [16.27$ (Digikey)](https://www.digikey.com.au/en/products/detail/stmicroelectronics/NUCLEO-L432KC/6132763?s=N4IgTCBcDaIHYFcDGAbApgewAQoCwGYwBrJEAXQF8g) | 16.27$     |
+| Display                                  | [Waveshare 2.42inch OLED Module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html)                   | 1   | [22.60$ (Core Electronics)](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html)                                                  | 22.60$     |
+| LED Strip                                | [W2812 RGB LED Strip 2m](https://core-electronics.com.au/digital-rgb-led-strip-120-led-black.html)                            | 1   | [19.60$ (Core Electronics)](https://core-electronics.com.au/digital-rgb-led-strip-120-led-black.html)                                                   | 19.60$     |
+| RFID Tags                                | [NTAG213 25mm Coin RFID Tag](https://core-electronics.com.au/ntag213-coin-25mm-white.html)                                    | 16  | [1.49$ (Core Electronics)](https://core-electronics.com.au/ntag213-coin-25mm-white.html)                                                                | 23.84$     |
+| RFID Sensor                              | [PiicoDev RFID Module](https://core-electronics.com.au/piicodev-rfid-module.html)                                             | 22  | [8.59$ (Core Electronics) Bulk](https://core-electronics.com.au/piicodev-rfid-module.html)                                                              | 188.98$    |
+| RFID I2C Bus 200mm                       | [PiicoDev Cable 200mm](https://core-electronics.com.au/piicodev-cable-200mm.html)                                             | 14  | [1.06$ (Core Electronics)](https://core-electronics.com.au/piicodev-cable-200mm.html)                                                                   | 14.84$     |
+| RFID I2C Bus 500mm                       | [PiicoDev Cable 500mm](https://core-electronics.com.au/piicodev-cable-500mm.html)                                             | 6   | [1.4$ (Core Electronics)](https://core-electronics.com.au/piicodev-cable-500mm.html)                                                                    | 8.40$      |
+| RFID Sensor I2C Breakout                 | [PiicoDev Adaptor for Breadboards](https://core-electronics.com.au/piicodev-breadboard-adapter.html)                          | 6   | [2.61$ (Core Electronics)](https://core-electronics.com.au/piicodev-breadboard-adapter.html)                                                            | 15.66$     |
+| RFID I2C Multiplexer                     | [TCA9548A I2C Multiplexer](https://core-electronics.com.au/tca9548a-i2c-multiplexer.html)                                     | 1   | [13.05$ (Core Electronics)](https://core-electronics.com.au/tca9548a-i2c-multiplexer.html)                                                              | 13.05$     |
+| Battery                                  | [LiPo Battery 2000mAh](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html)                        | 1   | [17.55$ (Core Electronics)](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html)                                             | 17.55$     |
+| Battery Management 5V Supply             | [SparkFun LiPo Charger/Booster - 5V/1A](https://www.sparkfun.com/products/14411)                                              | 1   | [28.35$ (Core Electronics)](https://core-electronics.com.au/sparkfun-lipo-charger-booster-5v-1a.html)                                                   | 28.35$     |
+| 3.3V Stepdown                            | [SparkFun BabyBuck Regulator Breakout - 3.3V](https://www.sparkfun.com/products/18357)                                        | 1   | [7.30$ (Core Electronics)](https://core-electronics.com.au/sparkfun-babybuck-regulator-breakout-3-3v-ap63203.html)                                      | 7.30$      |
+| PWM 5V Logic Level Shifter for LED Strip | [Logic Level Converter BiDirectional](https://core-electronics.com.au/logic-level-converter-bidirectional.html)               | 1   | [3.05$ (Core Electronics)](https://core-electronics.com.au/logic-level-converter-bidirectional.html)                                                    | 3.05$      |
+| Power Switch                             | [Rocker Switch (SPST)](https://core-electronics.com.au/rocker-switch-spst-round.html)                                         | 1   | [0.85$ (Core Electronics)](https://core-electronics.com.au/rocker-switch-spst-round.html)                                                               | 0.85$      |
+| Player Switch                            | [16mm Panel Mount Momentary Pushbutton - Red](https://core-electronics.com.au/16mm-panel-mount-momentary-pushbutton-red.html) | 1   | [1.91$ (Core Electronics)](https://core-electronics.com.au/16mm-panel-mount-momentary-pushbutton-red.html)                                              | 1.91$      |
+| Male-Female Jumpers                      | [Jumper Wire 20cm Ribbon M/F](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                           | 1   | [3.95$ (Core Electronics)](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                                                        | 3.95$      |
+| Male-Male Jumpers                        | [Male to Male Jumper Wires](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)            | 1   | [7.30$ (Core Electronics)](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)                                       | 7.30$      |
+| Male Headers                             | [Male Headers 2.56mm](https://core-electronics.com.au/header-male-pin-01x20.html)                                             | 2   | [0.35$ (Core Electronics)](https://core-electronics.com.au/header-male-pin-01x20.html)                                                                  | 0.70$      |
+| Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 2   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
+| Shipping                                 |                                                                                                                               |     |                                                                                                                                                         | 10.20$     |
+| Total Cost                               |                                                                                                                               |     |                                                                                                                                                         | 409.90$    |
 
 The main microcontroller is an [STM32L432KC](https://www.st.com/en/microcontrollers-microprocessors/stm32l432kc.html)
 on the [Nucleo-L432KC](https://www.st.com/en/evaluation-tools/nucleo-l432kc.html) used as the main board for the system.
-
-Peripherals:
-
-| Component       | Link                                                                                                                                            | Cost                                                                                                                                                    |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Microcontroller | [Nucleo-L432KC](https://www.st.com/en/evaluation-tools/nucleo-l432kc.html)                                                                      | [16.27$ (Digikey)](https://www.digikey.com.au/en/products/detail/stmicroelectronics/NUCLEO-L432KC/6132763?s=N4IgTCBcDaIHYFcDGAbApgewAQoCwGYwBrJEAXQF8g) |
-| Display         | [Waveshare 2.42inch OLED Module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html)                                     | [22.60$ (Core Electronics)](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html)                                                  |
-| LED Strip       | [Duinotech Arduino Compatible W2812B RGB LED Strip 2m](https://www.jaycar.com.au/duinotech-arduino-compatible-w2812b-rgb-led-strip-2m/p/XC4390) | [38.95$ (Jaycar)](https://www.jaycar.com.au/duinotech-arduino-compatible-w2812b-rgb-led-strip-2m/p/XC4390)                                              |
-| RFID Sensor     | [PiicoDev RFID Module](https://core-electronics.com.au/piicodev-rfid-module.html)                                                               | [10.50$ (Core Electronics)](https://core-electronics.com.au/piicodev-rfid-module.html)                                                                  |
-| RFID Tags       | [NTAG213 25mm Coin RFID Tag](https://core-electronics.com.au/ntag213-coin-25mm-white.html)                                                      | [1.55$ (Core Electronics)](https://core-electronics.com.au/ntag213-coin-25mm-white.html)                                                                |
-
-System:
-
-| Component                    | Link                                                                                                                          | Cost                                                                                                        |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| Battery Management 5V Supply | [SparkFun LiPo Charger/Booster - 5V/1A](https://www.sparkfun.com/products/14411)                                              | [17.50$ (Sparkfun)](https://www.sparkfun.com/products/14411)                                                |
-| 3.3V Stepdown                | [SparkFun BabyBuck Regulator Breakout - 3.3V](https://www.sparkfun.com/products/18357)                                        | [4.50$ (Sparkfun)](https://www.sparkfun.com/products/18357)                                                 |
-| PWM Voltage for LED Strip    | [SparkFun Logic Level Converter](https://www.sparkfun.com/products/12009)                                                     | [3.50$ (Sparkfun)](https://www.sparkfun.com/products/12009)                                                 |
-| Power Switch                 | [Rocker Switch (SPST)](https://www.sparkfun.com/products/11138)                                                               | [0.55$ (Sparkfun)](https://www.sparkfun.com/products/11138)                                                 |
-| Player Switch                | [16mm Panel Mount Momentary Pushbutton - Red](https://core-electronics.com.au/16mm-panel-mount-momentary-pushbutton-red.html) | [1.91$ (Core Electronics)](https://core-electronics.com.au/16mm-panel-mount-momentary-pushbutton-red.html)  |
-| Battery                      | [LiPo Battery 2000mAh](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html)                        | [17.55$ (Core Electronics)](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html) |
-
 
 ## 5. Connecting the Board
 

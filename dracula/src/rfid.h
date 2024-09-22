@@ -23,16 +23,6 @@ enum TokenKind {
     HolyWater,
 };
 
-struct DraculaToken {
-    unsigned char uid[7];
-    enum TokenKind kind;
-};
-
-/**
- * @brief Initialise the rfid driver.
- */
-bool rfid_init();
-
 /**
  * @brief The rfid thread handling I/O from rfid readers.
  */
