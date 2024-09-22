@@ -1,5 +1,7 @@
-#include <stddef.h>
+#ifndef ROOM_H
+#define ROOM_H
 
+#include <stddef.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -7,10 +9,6 @@
 ///                                  TYPES                                  ///
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
-
-
-#ifndef ROOM_TYPES
-#define ROOM_TYPES
 
 // The names of all of the rooms on the board
 enum RoomName {
@@ -51,10 +49,7 @@ struct RoomBuffer {
     size_t length; // number of rooms in the buffer.
 };
 
-#endif
-
 #define NUM_ROOMS 21
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,28 +58,39 @@ struct RoomBuffer {
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
 
-
-/*
- * Add the room to the room buffer if it is not there already.
+/**
+ * @brief Add the room to the room buffer if it is not there already.
  *
- * buff - the buffer to which to add the room. Assume that enough memory is
- *  allocated for an extra room.
- * room - the room to be added
+ * @param buff the buffer to which to add the room.
+ * @room room the room to be added
  *
+ * @note Assume that buff has enough memory allocated for an extra room.
  */
 void add_no_duplicate(struct RoomBuffer *const buff, const Room room);
 
-/*
- * Return the index of the given room in the room buffer. If it is not in the
- * buffer, return -1.
+/**
+ * @brief Give the index of the supplied room inside the room buffer
  *
- * This function has NO side effects
+ * @note This function has NO side effects
+ *
+ * @return the index of the room in the buffer if present. Otherwise, return -1
  */
 int contains_room(const struct RoomBuffer buff, const Room room);
 
-/*
- * Create a new room buffer that is a copy of buff. So that the memory of the
- * new buffer is disjoint to that of buff, pass in an array arr that can be
- * used as the rooms array in the room buffer, and copy the values over.
+/**
+ * @brief Create a new room buffer that is a copy of buff.
+ *
+ * @param buff the buffer of which to create a copy
+ * @param arr the array to use as the underlying memory for the new buffer
+ *
+ * @return a new room buffer with the same length as and containing the same
+ *  rooms as buff.
+ *
+ * @note The returned memory is entirely separate from that of buff (provided
+ *  arr is entirely separate)
  */
-struct RoomBuffer room_buffer_copy(const struct RoomBuffer buff, Room *const arr);
+struct RoomBuffer room_buffer_copy(
+        const struct RoomBuffer buff,
+        Room *const arr);
+
+#endif // ROOM_H

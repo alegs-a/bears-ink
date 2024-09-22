@@ -5,13 +5,11 @@
 #include <stdbool.h>
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 ///                                                                         ///
 ///                             CONSTANTS                                   ///
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
-
 
 #define NUM_PLAYERS 4 // the number of players in the game.
 #define PASSIVENESS 2 // Generally just controls likelihoods for detection and
@@ -25,16 +23,11 @@
                        // sunlight or a garlic
 
 
-
 ///////////////////////////////////////////////////////////////////////////////
 ///                                                                         ///
 ///                               TYPES                                     ///
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
-
-
-#ifndef GAME_STATE
-#define GAME_STATE
 
 struct GameState {
     // rooms that all of the players who can be bitten are in. If two players
@@ -50,8 +43,6 @@ struct GameState {
     // true iff Dracula can bite a player on this turn
     bool can_bite;
 };
-#endif
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -60,25 +51,24 @@ struct GameState {
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
 
-
-/*
- * Dracula completes his turn and updates his internal state.
+/**
+ * @brief Dracula completes his turn and updates his internal state. Write to
+ * bites the rooms that Dracula bites players in.
  *
- * st - the current game state
- * bites - a room buffer with enough memory for 4 rooms
+ * @note The list of rooms does not contain any duplicates.
  *
- * Write to bites the rooms that Dracula bites players in. The list of rooms
- * does not contain any duplicates.
+ * @param st the current game state
+ * @param[out] bites a buffer with enough memory for 4 rooms
  */
 void dracula_turn(struct GameState st, struct RoomBuffer *bites);
 
-
-/*
- * Dracula returns if he is present and updates his internal state.
+/**
+ * @brief Dracula returns if he is present and updates his internal state.
  *
- * st - the current game state.
+ * @param st the current game state.
+ * @param room the room to check if Dracula is present
  *
- * room - the room to check if Dracula is in
+ * @return true if and only if Dracula is present in the given room.
  */
 bool dracula_is_present(struct GameState st, Room room);
 
