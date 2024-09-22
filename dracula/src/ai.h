@@ -65,11 +65,12 @@ struct GameState {
  * Dracula completes his turn and updates his internal state.
  *
  * st - the current game state
+ * bites - a room buffer with enough memory for 4 rooms
  *
- * Return the buffer of rooms that Dracula bites players in. The list of rooms
+ * Write to bites the rooms that Dracula bites players in. The list of rooms
  * does not contain any duplicates.
  */
-struct RoomBuffer dracula_turn(struct GameState st);
+void dracula_turn(struct GameState st, struct RoomBuffer *bites);
 
 
 /*

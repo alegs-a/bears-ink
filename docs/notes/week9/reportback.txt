@@ -1,0 +1,26 @@
+Week: 9
+Date: 20/09/24
+
+Completed Tasks:
+- Reading and identifying different RFID tags
+- Script to turn PNG files into something we can write to the display
+- Big improvements to the documentation
+
+Current Focus:
+- Video ideation
+- Designing the board in CAD software
+- Implementing game logic for the board in C for hardware.
+- LED drivers
+- Confirmation button for player turns
+- C implementation of the Dracula AI
+- Create a planning document for the visual design and interaction design.
+
+Upcoming Tasks:
+- Write a storyboard and script for the explainer video
+- Shoot a low-quality draft video
+- Designing what will be written to the display
+
+Challenges/Roadblocks:
+- LED strips require some hardware we haven't ordered or tested yet, will
+  require the actual physical board to be designed very carefully
+- Balancing work on the project with work on other classes.
