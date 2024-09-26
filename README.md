@@ -153,6 +153,15 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
+- RFID
+
+| Wire Colour | I2C Function | Port | Configured As | Board Pin |
+| ----------- | ------------ | ---- | ------------- | --------- |
+| Blue        | Serial data  | PB7  | I2C1 SDA      | D4        |
+| Yellow      | Clock        | PB6  | I2C1 SCL      | D5        |
+| Red         | Power        | -    | 3.3V          | 3V3       |
+| Black       | Ground       | -    | 0V            | GND       |
+
 ## 6. Project Overview
 
 In Dracula, there five top level components:
@@ -230,8 +239,8 @@ flowchart LR
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
     - [`dracula.c`](/dracula/src/dracula.c) / [`dracula.h`](/dracula/src/dracula.h) - Core game logic implementation.
     - [`font.c`](/dracula/src/font.c) / [`font.h`](/dracula/src/font.h) - Interface for displaying strings on the display.
-    - [`MRFC522_I2C.c`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - 
-    - [`rfid.c`](/dracula/src/rfid.c) / [`rfid.h`](/dracula/src/rfid.h) - Implementation
+    - [`MRFC522_I2C.c`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
+    - [`rfid.c`](/dracula/src/rfid.c) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
     - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Game logic designs in other languages.
@@ -248,7 +257,7 @@ flowchart LR
   - [`west_update.sh`](/scripts/west_update.sh) -
 - [`.gitattributes`](/.gitattributes) - Ensures source files and bash scripts maintain linux LF line endings.
 - [`.gitignore`](/.gitignore) - Ignore file for C and python to prevent build files being committed to git.
-- [`REAMDE.md`](/README.md) - Project documentation.
+- [`README.md`](/README.md) - Project documentation.
 
 ## 8. Using the Display
 

@@ -44,13 +44,6 @@ K_MUTEX_DEFINE(tokensMutex);
  */
 DraculaToken currentTokens[MAX_TOKENS];
 
-bool rfid_init()
-{
-    // We can't do our initialisation here because the `mfrc522` variable above
-    // isn't initialised by the C++ runtime until `rfid_main` is called.
-    return true;
-}
-
 /**
  * @brief Set up the I2C bus and MFRC522 library to communicate with the chosen room.
  *
@@ -62,6 +55,12 @@ void select_room(enum RoomName room)
     mfrc522._chipAddress = 0x2c + room % 4;
 }
 
+/**
+ * @brief Scan the chosen room for new tokens
+ *
+ * This function will call select_room to ready the bus internally. If a new token
+ * is found, tokensMutex will be taken and the token will be added to currentTokens.
+ */
 void detect_new_card(enum RoomName room)
 {
     select_room(room);
