@@ -21,11 +21,8 @@ const struct device *const i2c1_dev = DEVICE_DT_GET(DT_ALIAS(rfid_i2c));
  * Constructor.
  * Prepares the output pins.
  */
-MFRC522::MFRC522(	byte chipAddress,
-					byte resetPowerDownPin	///< Arduino pin connected to MFRC522's reset and power down input (Pin 6, NRSTPD, active low)
-				) {
+MFRC522::MFRC522(	byte chipAddress) {
 	_chipAddress = chipAddress;
-	_resetPowerDownPin = resetPowerDownPin;
 } // End constructor
 
 
