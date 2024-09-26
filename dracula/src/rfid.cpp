@@ -190,8 +190,7 @@ void detect_current_cards()
         byte result = mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
 
         // Select the token we're working with currently
-        // FIXME: This currently does not support multiple tags on the same reader
-        result = mfrc522.PICC_Select(&mfrc522.uid);
+        result = mfrc522.PICC_Select(&mfrc522.uid, 7 * 8);
         if (result == MFRC522::STATUS_TIMEOUT) {
             // This token probably disappeared; forget about it
             printk("Token %d removed from room %d.\n", currentTokens[i].kind, currentTokens[i].room);
