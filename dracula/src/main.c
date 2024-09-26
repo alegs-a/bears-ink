@@ -6,7 +6,6 @@
 
 #include "ui.h"
 #include "font.h"
-#include "rfid.h"
 #include "display.h"
 #include "dracula.h"
 

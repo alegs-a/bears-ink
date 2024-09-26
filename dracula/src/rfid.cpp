@@ -45,16 +45,16 @@ int mfrc522_init(const struct device *dev)
     MFRC522 mfrc522(&config->i2c);
   
     if (!device_is_ready(config->i2c.bus)) {
-        LOG_ERR("I2C bus %s not ready", config->i2c.bus->name);
+        printk("I2C bus %s not ready\n", config->i2c.bus->name);
         return -ENODEV;
     }
 
     mfrc522.PCD_Init();
     byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-    LOG_DBG("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
+    printk("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
     // When 0x00 or 0xFF is returned, communication probably failed
     if ((v == 0x00) || (v == 0xFF)) {
-        LOG_ERR("Room %s not ready", config->room_name);
+        printk("Room %s not ready\n", config->room_name);
         return -ENODEV;
     }
 
