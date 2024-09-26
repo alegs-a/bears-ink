@@ -140,8 +140,9 @@ The development board pins can be seen below:
 > [!note]
 > The black button opposite the micro USB port is the reset button.
 
+### 5.1 Display
+
 Connect the following:
-- Display
 
 | Wire Colour | Display Function | Port | Configured As | Board Pin |
 | ----------- | ---------------- | ---- | ------------- | --------- |
@@ -153,7 +154,9 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
-- RFID
+### 5.2 RFID
+
+Connect the following:
 
 | Wire Colour | I2C Function | Port | Configured As | Board Pin |
 | ----------- | ------------ | ---- | ------------- | --------- |
@@ -161,6 +164,34 @@ Connect the following:
 | Yellow      | Clock        | PB6  | I2C1 SCL      | D5        |
 | Red         | Power        | -    | 3.3V          | 3V3       |
 | Black       | Ground       | -    | 0V            | GND       |
+
+In the [`app.overlay`](/dracula/app.overlay) device tree, configure the `rfid`
+nodes in the `&i2c1` bus. For example:
+
+```dts
+&i2c1 {
+	status = "okay";
+
+	rfid@2c {
+		compatible = "nxp,mfrc522";
+		reg = <0x2c>;
+		status = "okay";
+		bearsink,room = "NHALL";
+	};
+};
+```
+
+Make sure all `status`es are `"okay"`, and change the `reg = <0x2c>;` addresses
+to match your readers, if necessary.
+
+> [!note]
+> Make sure readers on the same bus have different I<sup>2</sup>C addresses from
+> each other; i.e. set the dip switches in different positions. Because the
+> PiicoDev modules support only 4 addresses, that is the maximum number of readers
+> per bus.
+
+Change the `bearsink,room` property to the [`enum RoomName`](/dracula/src/room.h)
+value corresponding to the room each reader represents
 
 ## 6. Project Overview
 
