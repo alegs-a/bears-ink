@@ -80,6 +80,8 @@
 #include <cstdint>
 #include <cstddef>
 
+#include <zephyr/drivers/i2c.h>
+
 using byte = uint8_t;
 using word = uint16_t;
 
@@ -316,15 +318,13 @@ public:
 
 	// Member variables
 	Uid uid;								// Used by PICC_ReadCardSerial().
-	byte _chipAddress;      // Was private, but I need it to be public
+	const struct i2c_dt_spec *i2c; // Was private, but I need it to be public
 
 	// Size of the MFRC522 FIFO
 	static const byte FIFO_SIZE = 64;		// The FIFO is 64 bytes.
 
-	/////////////////////////////////////////////////////////////////////////////////////
-	// Functions for setting up the Arduino
-	/////////////////////////////////////////////////////////////////////////////////////
-	MFRC522(byte chipAddress);
+	MFRC522();
+	MFRC522(const struct i2c_dt_spec *i2c);
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Basic interface functions for communicating with the MFRC522

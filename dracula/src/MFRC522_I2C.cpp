@@ -11,20 +11,10 @@
 #include <zephyr/drivers/i2c.h>
 #include <zephyr/sys/printk.h>
 
-const struct device *const i2c1_dev = DEVICE_DT_GET(DT_ALIAS(rfid_i2c));
-
-/////////////////////////////////////////////////////////////////////////////////////
-// Functions for setting up the Arduino
-/////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Constructor.
- * Prepares the output pins.
- */
-MFRC522::MFRC522(	byte chipAddress) {
-	_chipAddress = chipAddress;
-} // End constructor
-
+MFRC522::MFRC522() {}
+MFRC522::MFRC522(const struct i2c_dt_spec *device) {
+	i2c = device;
+}
 
 /////////////////////////////////////////////////////////////////////////////////////
 // Basic interface functions for communicating with the MFRC522
@@ -37,7 +27,7 @@ MFRC522::MFRC522(	byte chipAddress) {
 void MFRC522::PCD_WriteRegister(	byte reg,		///< The register to write to. One of the PCD_Register enums.
 									byte value		///< The value to write.
 								) {
-  i2c_reg_write_byte(i2c1_dev, _chipAddress, reg, value);
+  i2c_reg_write_byte_dt(i2c, reg, value);
 } // End PCD_WriteRegister()
 
 /**
@@ -50,7 +40,7 @@ void MFRC522::PCD_WriteRegister(	byte reg,		///< The register to write to. One o
 								) {
 	for (byte index = 0; index < count; index++) {
 		// FIXME: Batch these writes?
-	  i2c_reg_write_byte(i2c1_dev, _chipAddress, reg, values[index]);
+	  i2c_reg_write_byte_dt(i2c, reg, values[index]);
 	}
 } // End PCD_WriteRegister()
 
@@ -61,7 +51,7 @@ void MFRC522::PCD_WriteRegister(	byte reg,		///< The register to write to. One o
 byte MFRC522::PCD_ReadRegister(	byte reg	///< The register to read from. One of the PCD_Register enums.
 								) {
 	byte value;
-  i2c_reg_read_byte(i2c1_dev, _chipAddress, reg, &value);
+  i2c_reg_read_byte_dt(i2c, reg, &value);
 	return value;
 } // End PCD_ReadRegister()
 
@@ -77,8 +67,7 @@ void MFRC522::PCD_ReadRegister(	byte reg,		///< The register to read from. One o
 	if (count == 0) {
 		return;
 	}
-	byte address = reg;
-	i2c_write_read(i2c1_dev, _chipAddress, &reg, 1, values, count);
+	i2c_write_read_dt(i2c, &reg, 1, values, count);
 } // End PCD_ReadRegister()
 
 /**

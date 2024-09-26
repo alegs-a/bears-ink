@@ -11,6 +11,9 @@
 #include <zephyr/sys/printk.h>
 
 #include <zephyr/drivers/i2c.h>
+#include <zephyr/logging/log.h>
+
+LOG_MODULE_REGISTER(mfrc522, CONFIG_I2C_LOG_LEVEL);
 
 // Thread running the rfid driver.
 static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
@@ -19,7 +22,75 @@ static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
 // Defined and initialised by the above macro.
 extern const k_tid_t rfid_thread_id;
 
-MFRC522 mfrc522(0x2c);
+#define DT_DRV_COMPAT nxp_mfrc522
+#define MFRC522_INIT_PRIO 64
+
+// BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
+//     "RFID readers must be initialised after their bus");
+
+struct mfrc522_data {
+};
+struct mfrc522_cfg {
+    struct i2c_dt_spec i2c;
+    const char *room_name;
+    enum RoomName room;
+};
+
+int mfrc522_init(const struct device *dev)
+{
+    const struct mfrc522_cfg *config = (const struct mfrc522_cfg *)dev->config;
+    MFRC522 mfrc522(&config->i2c);
+  
+    if (!device_is_ready(config->i2c.bus)) {
+        LOG_ERR("I2C bus %s not ready", config->i2c.bus->name);
+        return -ENODEV;
+    }
+
+    mfrc522.PCD_Init();
+    byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
+    LOG_DBG("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
+    // When 0x00 or 0xFF is returned, communication probably failed
+    if ((v == 0x00) || (v == 0xFF)) {
+        LOG_ERR("Room %s not ready", config->room_name);
+        return -ENODEV;
+    }
+
+    mfrc522.PCD_SetAntennaGain(0x50);
+
+    return 0;
+}
+
+#define MFRC522_INIT(inst)                                        \
+    static mfrc522_data mfrc522_data_##inst = {                   \
+    };                                                            \
+    static const mfrc522_cfg mfrc522_cfg_##inst = {               \
+        .i2c = I2C_DT_SPEC_INST_GET(inst),                        \
+        .room_name = DT_PROP(DT_DRV_INST(inst), bearsink_room),   \
+        .room = DT_STRING_TOKEN(DT_DRV_INST(inst), bearsink_room) \
+    };                                                            \
+    I2C_DEVICE_DT_INST_DEFINE(inst,                               \
+           mfrc522_init, NULL,                                    \
+           &mfrc522_data_##inst, &mfrc522_cfg_##inst,             \
+           POST_KERNEL, MFRC522_INIT_PRIO, NULL);
+
+#define MFRC522_ROOM_CASE(inst)                             \
+    case DT_STRING_TOKEN(DT_DRV_INST(inst), bearsink_room): \
+        return DEVICE_DT_INST_GET(inst);
+
+#define MFRC522_DETECT_NEW(inst) \
+    detect_new_card(mfrc522, (const struct mfrc522_cfg *)DEVICE_DT_INST_GET(inst)->config);
+
+
+DT_INST_FOREACH_STATUS_OKAY(MFRC522_INIT)
+
+const struct device *get_room(enum RoomName room)
+{
+    switch (room) {
+        DT_INST_FOREACH_STATUS_OKAY(MFRC522_ROOM_CASE)
+        default:
+            return NULL;
+    }
+}
 
 struct DraculaToken {
     enum RoomName room = MAXIMUM_ROOM;
@@ -45,25 +116,13 @@ K_MUTEX_DEFINE(tokensMutex);
 DraculaToken currentTokens[MAX_TOKENS];
 
 /**
- * @brief Set up the I2C bus and MFRC522 library to communicate with the chosen room.
- *
- * This will modify the state of the TCA9548A bus multiplexer, and the _chipAddress
- * variable in mfrc522.
- */
-void select_room(enum RoomName room)
-{
-    mfrc522._chipAddress = 0x2c + room % 4;
-}
-
-/**
  * @brief Scan the chosen room for new tokens
  *
- * This function will call select_room to ready the bus internally. If a new token
- * is found, tokensMutex will be taken and the token will be added to currentTokens.
+ * This function will configure mfrc522 to use the given room internally.
  */
-void detect_new_card(enum RoomName room)
+void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 {
-    select_room(room);
+    mfrc522.i2c = &room->i2c;
 
     if (!mfrc522.PICC_IsNewCardPresent()) {
         return;
@@ -120,27 +179,27 @@ void detect_new_card(enum RoomName room)
     enum TokenKind token_kind;
     if (strcmp(kind, "player1") == 0) {
         token_kind = Player1;
-        printk("Found Bears Ink token in room %d: Player1\n", room);
+        printk("Found Bears Ink token in room %s: Player1\n", room->room_name);
     } else if (strcmp(kind, "player2") == 0) {
         token_kind = Player2;
-        printk("Found Bears Ink token in room %d: Player2\n", room);
+        printk("Found Bears Ink token in room %s: Player2\n", room->room_name);
     } else if (strcmp(kind, "player3") == 0) {
         token_kind = Player3;
-        printk("Found Bears Ink token in room %d: Player3\n", room);
+        printk("Found Bears Ink token in room %s: Player3\n", room->room_name);
     } else if (strcmp(kind, "player4") == 0) {
         token_kind = Player4;
-        printk("Found Bears Ink token in room %d: Player4\n", room);
+        printk("Found Bears Ink token in room %s: Player4\n", room->room_name);
     } else if (strcmp(kind, "garlic") == 0) {
         token_kind = Garlic;
-        printk("Found Bears Ink token in room %d: Garlic\n", room);
+        printk("Found Bears Ink token in room %s: Garlic\n", room->room_name);
     } else if (strcmp(kind, "sun") == 0) {
         token_kind = Sunlight;
-        printk("Found Bears Ink token in room %d: Sunlight\n", room);
+        printk("Found Bears Ink token in room %s: Sunlight\n", room->room_name);
     } else if (strcmp(kind, "water") == 0) {
         token_kind = HolyWater;
-        printk("Found Bears Ink token in room %d: HolyWater\n", room);
+        printk("Found Bears Ink token in room %s: HolyWater\n", room->room_name);
     } else {
-        printk("Unrecognised Bears Ink token in room %d: (%d) %s\n", mfrc522._chipAddress, url_len, data);
+        printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         return;
     }
@@ -153,7 +212,7 @@ void detect_new_card(enum RoomName room)
             continue;
         }
 
-        currentTokens[i].room = room;
+        currentTokens[i].room = room->room;
         currentTokens[i].kind = token_kind;
         memcpy(currentTokens[i].uid, mfrc522.uid.uidByte, 7);
         break;
@@ -169,7 +228,7 @@ void detect_new_card(enum RoomName room)
  *
  * Takes tokensMutex internally and removes non-present tokens.
  */
-void detect_current_cards()
+void detect_current_cards(MFRC522 mfrc522)
 {
     k_mutex_lock(&tokensMutex, K_FOREVER);
     for (int i = 0; i < MAX_TOKENS; i++) {
@@ -178,11 +237,13 @@ void detect_current_cards()
             continue;
         }
 
+        const struct mfrc522_cfg *room =
+            (const struct mfrc522_cfg *)get_room(currentTokens[i].room)->config;
+        mfrc522.i2c = &room->i2c;
+
         mfrc522.uid.size = 7;
         mfrc522.uid.sak = 0;
         memcpy(mfrc522.uid.uidByte, currentTokens[i].uid, 7);
-
-        select_room(currentTokens[i].room);
 
         // Wake up all the tokens on this reader
         byte bufferATQA[2];
@@ -193,7 +254,7 @@ void detect_current_cards()
         result = mfrc522.PICC_Select(&mfrc522.uid, 7 * 8);
         if (result == MFRC522::STATUS_TIMEOUT) {
             // This token probably disappeared; forget about it
-            printk("Token %d removed from room %d.\n", currentTokens[i].kind, currentTokens[i].room);
+            printk("Token %d removed from room %s.\n", currentTokens[i].kind, room->room_name);
             currentTokens[i].room = MAXIMUM_ROOM;
         }
 
@@ -204,30 +265,10 @@ void detect_current_cards()
 
 void rfid_main(void *, void *, void *)
 {
-    mfrc522._chipAddress = 0x2c;
-    mfrc522.PCD_Init();
-    byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-    printk("MFRC522 @ %x Software Version: 0x%x\n", mfrc522._chipAddress, v);
-    // When 0x00 or 0xFF is returned, communication probably failed
-    if ((v == 0x00) || (v == 0xFF)) {
-        printk("WARNING: Communication failure, is the MFRC522 properly connected?\n");
-    }
-    mfrc522.PCD_SetAntennaGain(0x50);
-
-    mfrc522._chipAddress = 0x2e;
-    mfrc522.PCD_Init();
-    v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-    printk("MFRC522 @ %x Software Version: 0x%x\n", mfrc522._chipAddress, v);
-    // When 0x00 or 0xFF is returned, communication probably failed
-    if ((v == 0x00) || (v == 0xFF)) {
-        printk("WARNING: Communication failure, is the MFRC522 properly connected?\n");
-    }
-    mfrc522.PCD_SetAntennaGain(0x50);
+    MFRC522 mfrc522;
 
     for (;;) {
-        detect_new_card(NHALL);
-        detect_new_card(GUARDEDWAY);
-
-        detect_current_cards();
+        DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
+        detect_current_cards(mfrc522);
     }
 }
