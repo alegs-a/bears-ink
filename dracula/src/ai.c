@@ -1,5 +1,6 @@
 #include "ai.h"
 #include "room.h"
+#include <stdlib.h>
 #include <stdbool.h>
 
 
@@ -220,6 +221,7 @@ static bool bite(
     // Base case for comparison
     bites->length = 0;
     ending_distribution->length = 0;
+    *score = 1;
 
     // In-place sort of best bite option
     struct RoomBuffer start_copy;     Room start_buf[NUM_ROOMS];
@@ -240,13 +242,34 @@ static bool bite(
                 positions_copy,
                 &bites_copy,
                 &ending_copy);
-        // TODO: actually do random number stuff, comparisons, and update bites
-        // and ending_distribution
+
+        // score for safe rooms to end the turn
+        // Don't round the score to 0 here - we want to compare the best way to
+        // bite more than one player
+        float safe = ending_copy.length ? ending_copy.length : 1;
+        safe = rand() / safe;
+
+        // in-place lex comparison - smaller score is better
+        if (bites_copy.length > bites->length
+                || (bites_copy.length == bites-> length && safe < *score)) {
+            room_buffer_copy(bites, bites_copy);
+            room_buffer_copy(ending_distribution, ending_copy);
+            *score = safe;
+        }
     }
 
-    if (bites->length == 0) return false;
-    if (ending_distribution->length == 0) {
-        add_with_duplicate(ending_distribution, bites->rooms[bites->length - 1]);
-    }
-    return true;
+    // Now we can set the score to 0 (if necessary)
+    if (bites->length > 1) *score = 0;
+    return bites->length != 0; // false iff there is no possible bite
+}
+
+
+// TODO: write this function
+void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
+
+    // Edge case for if we do the bite, but there are NO safe rooms
+    //if (ending_distribution->length == 0) {
+    //    // Edge case: no safe rooms to end the turn, so 
+    //    add_with_duplicate(dracula_state, bites->rooms[bites->length - 1]);
+    //}
 }
