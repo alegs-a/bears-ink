@@ -118,6 +118,13 @@ int contains_room(const struct RoomBuffer buff, const Room room);
 void room_buffer_copy(struct RoomBuffer *dst, const struct RoomBuffer src);
 
 /**
+ * @brief Remove any duplicates from a room buffer
+ *
+ * @param[in,out] buf : the buffer from which to remove duplicates
+ */
+void remove_duplicate_rooms(struct RoomBuffer *buf);
+
+/**
  * @brief Create a new room buffer that is a copy of buff.
  *
  * @param buff the buffer of which to create a copy

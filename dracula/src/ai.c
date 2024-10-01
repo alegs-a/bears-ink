@@ -2,7 +2,9 @@
 #include "room.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <stdio.h>
 
+#define ASSERT(b, err_str) if (!(b)) fprintf(stderr, "Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
 
 // number of rounds since the last time Dracula bit a player
 static int last_bite = 0; // needs to start at 0 for algos to work
@@ -13,7 +15,6 @@ static Room dracula_rooms[NUM_ROOMS]; // allocate on the stack
 // TODO: set up the rooms buffer and initialize dracula_rooms here
 // *dracula_rooms = DUNGEON;
 static struct RoomBuffer dracula_state = { .rooms = dracula_rooms, .length = 1 };
-
 
 /*
  * Find the rooms that Dracula could be in after length steps
@@ -86,7 +87,7 @@ static int shortest_walk(
  * Otherwise, if Dracula is not in a room with sunlight in it, do nothing and
  * return DRACULA_MOVES.
  */
-static int turn_starts(struct GameState *st) {
+static int turn_starts(const struct GameState *st) {
     int sunlight_index = contains_room(st->sunlights_to, dracula_state.rooms[0]);
 
     // Dracula is not in any room with sunlight
@@ -264,12 +265,34 @@ static bool bite(
 }
 
 
-// TODO: write this function
 void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
+    float bite_roll = ((float)last_bite / (float)WITHOUT_BITE) * rand();
+    int num_moves = turn_starts(st);
+    bites->length = 0;
 
-    // Edge case for if we do the bite, but there are NO safe rooms
-    //if (ending_distribution->length == 0) {
-    //    // Edge case: no safe rooms to end the turn, so 
-    //    add_with_duplicate(dracula_state, bites->rooms[bites->length - 1]);
-    //}
+    ASSERT(dracula_state.length > 0, "invalid Dracula state");
+    // Literally nothing that Dracula can do
+    if (num_moves <= 0) return;
+
+    // Run the heuristic
+    float bite_score;
+    Room ending[NUM_ROOMS];
+    struct RoomBuffer ending_distribution;
+    ending_distribution.rooms = ending;
+    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
+
+    if (!can_bite || bite_score > bite_roll) { // no bite
+        // update Dracula's state
+        Room buf[2*NUM_PLAYERS];
+        struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, buf);
+        concat_no_duplicate(&innacc, st->can_bite_player_positions);
+        walk_ends(innacc, num_moves, &dracula_state);
+    } else { // BITE!
+        remove_duplicate_rooms(bites);
+        room_buffer_copy(&dracula_state, ending_distribution);
+        // Edge case for if we do the bite, but there are NO safe rooms
+        if (dracula_state.length == 0) {
+            add_with_duplicate(&dracula_state, bites->rooms[bites->length - 1]);
+        }
+    }
 }

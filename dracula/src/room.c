@@ -23,10 +23,12 @@ void concat_no_duplicate(struct RoomBuffer *dst, const struct RoomBuffer src) {
 
 void remove_if_present(struct RoomBuffer *buf, const Room room) {
     int i = contains_room(*buf, room);
-    if (i < 0) return;
-    memmove(buf->rooms + i, buf->rooms + i + 1,
-            sizeof(Room) * (buf->length - i - 1));
-    buf->length--;
+    while (i >= 0) {
+        memmove(buf->rooms + i, buf->rooms + i + 1,
+                sizeof(Room) * (buf->length - i - 1));
+        buf->length--;
+        i = contains_room(*buf, room);
+    }
 }
 
 
@@ -41,6 +43,19 @@ int contains_room(const struct RoomBuffer buff, const Room room) {
 void room_buffer_copy(struct RoomBuffer *dst, const struct RoomBuffer src) {
     memcpy(dst->rooms, src.rooms, src.length * sizeof(Room));
     dst->length = src.length;
+}
+
+
+void remove_duplicate_rooms(struct RoomBuffer *buf) {
+    // This algo is slightly cursed. It exploits buf and copy having the same
+    // underlying memory.
+    struct RoomBuffer copy;
+    for (int i = 0; i < buf->length - 1; i++) {
+        copy.rooms = buf->rooms + i + 1;
+        copy.length = buf->length - i - 1;;
+        remove_if_present(&copy, buf->rooms[i]);
+        buf->length = copy.length + i + 1;
+    }
 }
 
 
