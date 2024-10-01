@@ -30,11 +30,12 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 struct GameState {
-    // rooms that all of the players who can be bitten are in. If two players
-    // are in the same room, include that room twice. (that is, counted for
-    // mulitplicity)
-    struct RoomBuffer player_positions;
-
+    // Rooms that all of the players are in. If two players are in the same
+    // room, include that room twice. (that is, counted with mulitplicity)
+    struct RoomBuffer all_player_positions;
+    // Just those rooms containing players who can be bitten (counted with
+    // multiplicity)
+    struct RoomBuffer can_bite_player_positions;
     // the rooms that sunlights are cast to and from, counted for multiplicity.
     // The sunlight cast to the room at index i is cast from the room at index
     // i of sunlights_from.
@@ -57,19 +58,19 @@ struct GameState {
  *
  * @note The list of rooms does not contain any duplicates.
  *
- * @param st the current game state
+ * @param[in] st the current game state
  * @param[out] bites a buffer with enough memory for 4 rooms
  */
-void dracula_turn(struct GameState st, struct RoomBuffer *bites);
+void dracula_turn(const struct GameState *st, struct RoomBuffer *bites);
 
 /**
  * @brief Dracula returns if he is present and updates his internal state.
  *
- * @param st the current game state.
- * @param room the room to check if Dracula is present
+ * @param[in] st the current game state.
+ * @param room[in] the room to check if Dracula is present
  *
  * @return true if and only if Dracula is present in the given room.
  */
-bool dracula_is_present(struct GameState st, Room room);
+bool dracula_is_present(const struct GameState *st, const Room room);
 
 #endif // AI_H
