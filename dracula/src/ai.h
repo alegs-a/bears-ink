@@ -66,11 +66,10 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites);
 /**
  * @brief Dracula returns if he is present and updates his internal state.
  *
- * @param[in] st the current game state.
  * @param room[in] the room to check if Dracula is present
  *
  * @return true if and only if Dracula is present in the given room.
  */
-bool dracula_is_present(const struct GameState *st, const Room room);
+bool dracula_is_present(const Room room);
 
 #endif // AI_H

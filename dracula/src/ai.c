@@ -266,6 +266,8 @@ static bool bite(
 
 
 void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
+    last_bite++;
+    last_info++;
     float bite_roll = ((float)last_bite / (float)WITHOUT_BITE) * rand();
     int num_moves = turn_starts(st);
     bites->length = 0;
@@ -281,7 +283,7 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     ending_distribution.rooms = ending;
     bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
 
-    if (!can_bite || bite_score > bite_roll) { // no bite
+    if (!can_bite || bite_score > bite_roll || !(st->can_bite)) { // no bite
         // update Dracula's state
         Room buf[2*NUM_PLAYERS];
         struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, buf);
@@ -294,5 +296,31 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
         if (dracula_state.length == 0) {
             add_with_duplicate(&dracula_state, bites->rooms[bites->length - 1]);
         }
+        last_bite = 0;
+        last_info = 0;
     }
+}
+
+
+bool dracula_is_present(const Room room) {
+    ASSERT(dracula_state.length > 0, "invalid Dracula state");
+
+    // Dracula cannot possibly be in the room
+    if (contains_room(dracula_state, room) < 0) return false;
+
+    float info_threshold = (float)last_info / (float)(dracula_state.length * WITHOUT_INFO);
+    float bite_threshold = (float)last_bite / (float)(WITHOUT_BITE);
+    float info_roll = rand();
+    float bite_roll = rand();
+
+    // Information given! update the state and last_info
+    if (info_roll <= info_threshold && bite_roll <= bite_threshold) {
+        dracula_state.rooms[0] = room;
+        dracula_state.length = 1;
+        last_info = 0;
+        return true;
+    }
+
+    remove_if_present(&dracula_state, room);
+    return false;
 }
