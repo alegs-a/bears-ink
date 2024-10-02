@@ -187,7 +187,7 @@ to match your readers, if necessary.
 > [!note]
 > Make sure readers on the same bus have different I<sup>2</sup>C addresses from
 > each other; i.e. set the dip switches in different positions. Because the
-> PiicoDev modules support only 4 addresses, that is the maximum number of readers
+> PiicoDev modules support only 4 addresses, 4 is the maximum number of readers
 > per bus.
 
 Change the `bearsink,room` property to the [`enum RoomName`](/dracula/src/room.h)
@@ -200,8 +200,8 @@ In Dracula, there five top level components:
   any tokens placed on top of them. This is implemented at [`rfid.cpp` /
   `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
   [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from
-  [here](https://github.com/arozcan/MFRC522-I2C-Library) and has been adapted to
-  use Zephyr APIs.
+  [arozcan/MFRC522-I2C-Library](https://github.com/arozcan/MFRC522-I2C-Library)
+  and has been adapted to use Zephyr APIs.
 - **LED Strip** - Used to display user.
 - **OLED Display** - Provides complex information to the users and information
   unable to be conveyed by the LEDs or through game mechanics. Implemented by
@@ -230,6 +230,9 @@ classDiagram
   class Display {
     display_write()
     display_image()
+  }
+  class RFID {
+    rfid_get_tokens()
   }
 ```
 
@@ -270,8 +273,8 @@ flowchart LR
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
     - [`dracula.c`](/dracula/src/dracula.c) / [`dracula.h`](/dracula/src/dracula.h) - Core game logic implementation.
     - [`font.c`](/dracula/src/font.c) / [`font.h`](/dracula/src/font.h) - Interface for displaying strings on the display.
-    - [`MRFC522_I2C.c`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
-    - [`rfid.c`](/dracula/src/rfid.c) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
+    - [`MRFC522_I2C.cpp`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
+    - [`rfid.cpp`](/dracula/src/rfid.cpp) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
     - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Game logic designs in other languages.
