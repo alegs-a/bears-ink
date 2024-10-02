@@ -98,8 +98,6 @@ struct DraculaToken {
     enum TokenKind kind;
 };
 
-#define MAX_TOKENS 64
-
 K_MUTEX_DEFINE(tokensMutex);
 
 /**
@@ -261,6 +259,29 @@ void detect_current_cards(MFRC522 mfrc522)
         mfrc522.PICC_HaltA();
     }
     k_mutex_unlock(&tokensMutex);
+}
+
+int rfid_get_tokens(struct Token *tokens)
+{
+    // Acquire the mutex so the rfid thread doesn't change the current tokens while we're reading
+    // them out.
+    k_mutex_lock(&tokensMutex, K_FOREVER);
+
+    int tokenCount = 0;
+    for (int i = 0; i < MAX_TOKENS; i++) {
+        if (currentTokens[i].room == MAXIMUM_ROOM) {
+            // Empty list entry; ignore.
+            continue;
+        }
+
+        tokens[tokenCount].kind = currentTokens[i].kind;
+        tokens[tokenCount].room = currentTokens[i].room;
+        tokenCount++;
+    }
+
+    k_mutex_unlock(&tokensMutex);
+
+    return tokenCount;
 }
 
 void rfid_main(void *, void *, void *)
