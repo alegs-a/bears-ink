@@ -29,6 +29,7 @@
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
 
+// NOTE: have updated this to have two separate buffers for player positions
 struct GameState {
     // Rooms that all of the players are in. If two players are in the same
     // room, include that room twice. (that is, counted with mulitplicity)

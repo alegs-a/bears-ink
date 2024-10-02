@@ -12,19 +12,20 @@ static int last_bite = 0; // needs to start at 0 for algos to work
 static int last_info = 0; // Players know Dracula's starting position
 // Distribution of rooms where Dracula could be
 static Room dracula_rooms[NUM_ROOMS]; // allocate on the stack
-// TODO: set up the rooms buffer and initialize dracula_rooms here
-// *dracula_rooms = DUNGEON;
+// TODO: initialize dracula_rooms here
+// *dracula_rooms = all_rooms[DUNGEON];
 static struct RoomBuffer dracula_state = { .rooms = dracula_rooms, .length = 1 };
 
 /*
- * Find the rooms that Dracula could be in after length steps
+ * @brief Find the the rooms that can be reached in AT MOST length number of
+ *  moves (without passing through any room in innaccessible) and store the
+ *  result in start.
  *
- * innaccessible - the rooms that Dracula is not permitted to enter
- * length - the number of moves into an adjacent room that Dracula may make
- * starting - the starting rooms
+ * @note starting and innaccessible must be disjoint
  *
- * Store the result in starting, assuming that it has enough memory allocated
- * to store EVERY room on the board.
+ * @param[in] innaccessible : the rooms that Dracula is not permitted to enter
+ * @param[in] length : the maximum number of moves into an adjacent room
+ * @param[in,out] starting - the starting rooms. Store the result in here
  */
 static void walk_ends(
         const struct RoomBuffer innaccessible,
@@ -32,8 +33,6 @@ static void walk_ends(
         struct RoomBuffer *const starting) {
 
     for (; length >= 0; length--) {
-        // PERF: this is probably pretty damn slow, look here if we are having
-        // problems
         for (int i = 0; i < starting->length; i++) {
             for (int j = 0; j < starting->rooms[i].adjacent->length; j++) {
                 Room adj = starting->rooms[i].adjacent->rooms[j];
@@ -46,46 +45,50 @@ static void walk_ends(
 
 
 /*
- * Find the least number of moves to get from any room in starting to the end
- * room. If this is impossible or requires more moves than DRACULA_MOVES,
- * return DRACULA_MOVES + 1.
+ * @brief Find the least number of moves to get from any room in starting to the
+ *  end room, without entering any innaccessible rooms. If this is impossible or
+ *  requires more moves than DRACULA_MOVES,
+ *  return DRACULA_MOVES + 1.
+ * 
+ * @note starting and innaccessible must be disjoint
  *
- * Assume that innaccessible and starting are disjoint.
+ * @param[in] innaccessible : the rooms that Dracula may not enter
+ * @param[in] end : the room to find the least number of moves required to reach
+ * @param[in] starting : collection of rooms in which Dracula may start
  */
 static int shortest_walk(
         const struct RoomBuffer innaccessible,
         const Room end,
-        struct RoomBuffer starting) {
+        const struct RoomBuffer starting) {
 
     if (contains_room(innaccessible, end) >= 0) return DRACULA_MOVES + 1;
-
-    int num_moves;
 
     // distribution is the rooms within num_moves of starting. We will mutate
     // this, so make sure we don't mess with starting
     Room room_arr[NUM_ROOMS];
     struct RoomBuffer distribution = room_buffer_from(starting, room_arr);
 
-    for (num_moves = 0; num_moves <= DRACULA_MOVES; num_moves++) {
+    for (int num_moves = 0; num_moves <= DRACULA_MOVES; num_moves++) {
         if (contains_room(distribution, end) >= 0) return num_moves;
         walk_ends(innaccessible, 1, &distribution);
     }
 
-    return num_moves;
+    return DRACULA_MOVES + 1;
 }
 
 
 /*
- * This function exists for the case when Dracula starts his turn in a room
- * with sunlight in it.
+ * @brief this function exists for the case when Dracula starts his turn in a
+ *  room with sunlight in it. Call at the start of Dracula's turn. If he is in a
+ *  room with sunlight, move him out of the room and update his state.
+ *  Otherwise, if Dracula is not in a room with sunlight in it, do nothing.
  *
- * Call at the start of Dracula's turn. If he is in a room with sunlight, move
- * him out of the room, update his state, and return the number of moves he has
- * left on his turn. If there are no ways to move out of the sunlight room,
- * return 0.
+ * @note this function reads and modifies internal dracula state.
  *
- * Otherwise, if Dracula is not in a room with sunlight in it, do nothing and
- * return DRACULA_MOVES.
+ * @param[in] st : the current game state
+ *
+ * @return the number of moves he has left on his turn. If there are no ways to
+ *  move out of the sunlight room, return 0.
  */
 static int turn_starts(const struct GameState *st) {
     int sunlight_index = contains_room(st->sunlights_to, dracula_state.rooms[0]);
@@ -314,7 +317,8 @@ bool dracula_is_present(const Room room) {
     float bite_roll = rand();
 
     // Information given! update the state and last_info
-    if (info_roll <= info_threshold && bite_roll <= bite_threshold) {
+    if (dracula_state.length == 1 // Dracula necessarily present
+            || (info_roll <= info_threshold && bite_roll <= bite_threshold)) {
         dracula_state.rooms[0] = room;
         dracula_state.length = 1;
         last_info = 0;
