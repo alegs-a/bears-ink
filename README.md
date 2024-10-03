@@ -140,8 +140,9 @@ The development board pins can be seen below:
 > [!note]
 > The black button opposite the micro USB port is the reset button.
 
+### 5.1 Display
+
 Connect the following:
-- Display
 
 | Wire Colour | Display Function | Port | Configured As | Board Pin |
 | ----------- | ---------------- | ---- | ------------- | --------- |
@@ -153,6 +154,45 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
+### 5.2 RFID
+
+Connect the following:
+
+| Wire Colour | I2C Function | Port | Configured As | Board Pin |
+| ----------- | ------------ | ---- | ------------- | --------- |
+| Blue        | Serial data  | PB7  | I2C1 SDA      | D4        |
+| Yellow      | Clock        | PB6  | I2C1 SCL      | D5        |
+| Red         | Power        | -    | 3.3V          | 3V3       |
+| Black       | Ground       | -    | 0V            | GND       |
+
+In the [`app.overlay`](/dracula/app.overlay) device tree, configure the `rfid`
+nodes in the `&i2c1` bus. For example:
+
+```dts
+&i2c1 {
+	status = "okay";
+
+	rfid@2c {
+		compatible = "nxp,mfrc522";
+		reg = <0x2c>;
+		status = "okay";
+		bearsink,room = "NHALL";
+	};
+};
+```
+
+Make sure all `status`es are `"okay"`, and change the `reg = <0x2c>;` addresses
+to match your readers, if necessary.
+
+> [!note]
+> Make sure readers on the same bus have different I<sup>2</sup>C addresses from
+> each other; i.e. set the dip switches in different positions. Because the
+> PiicoDev modules support only 4 addresses, 4 is the maximum number of readers
+> per bus.
+
+Change the `bearsink,room` property to the [`enum RoomName`](/dracula/src/room.h)
+value corresponding to the room each reader represents
+
 ## 6. Project Overview
 
 In Dracula, there five top level components:
@@ -160,8 +200,8 @@ In Dracula, there five top level components:
   any tokens placed on top of them. This is implemented at [`rfid.cpp` /
   `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
   [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from
-  [here](https://github.com/arozcan/MFRC522-I2C-Library) and has been adapted to
-  use Zephyr APIs.
+  [arozcan/MFRC522-I2C-Library](https://github.com/arozcan/MFRC522-I2C-Library)
+  and has been adapted to use Zephyr APIs.
 - **LED Strip** - Used to display user.
 - **OLED Display** - Provides complex information to the users and information
   unable to be conveyed by the LEDs or through game mechanics. Implemented by
@@ -190,6 +230,9 @@ classDiagram
   class Display {
     display_write()
     display_image()
+  }
+  class RFID {
+    rfid_get_tokens()
   }
 ```
 
@@ -230,8 +273,8 @@ flowchart LR
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
     - [`dracula.c`](/dracula/src/dracula.c) / [`dracula.h`](/dracula/src/dracula.h) - Core game logic implementation.
     - [`font.c`](/dracula/src/font.c) / [`font.h`](/dracula/src/font.h) - Interface for displaying strings on the display.
-    - [`MRFC522_I2C.c`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - 
-    - [`rfid.c`](/dracula/src/rfid.c) / [`rfid.h`](/dracula/src/rfid.h) - Implementation
+    - [`MRFC522_I2C.cpp`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
+    - [`rfid.cpp`](/dracula/src/rfid.cpp) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
     - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Game logic designs in other languages.
@@ -248,7 +291,7 @@ flowchart LR
   - [`west_update.sh`](/scripts/west_update.sh) -
 - [`.gitattributes`](/.gitattributes) - Ensures source files and bash scripts maintain linux LF line endings.
 - [`.gitignore`](/.gitignore) - Ignore file for C and python to prevent build files being committed to git.
-- [`REAMDE.md`](/README.md) - Project documentation.
+- [`README.md`](/README.md) - Project documentation.
 
 ## 8. Using the Display
 

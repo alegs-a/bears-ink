@@ -14,7 +14,7 @@
 
 // The names of all of the rooms on the board
 enum RoomName {
-    NHALL,
+    NHALL = 0,
     TOMB,
     GUARDEDWAY,
     GALLERY,

@@ -6,12 +6,16 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include "room.h"
 
-// The stack size of the dracula thread.
+// The stack size of the rfid thread.
 #define RFID_THREAD_STACK_SIZE 2048
 
-// The thread priority of the dracula logic.
+// The thread priority of the thread logic.
 #define RFID_THREAD_PRIORITY 5
+
+// The maximum number of tokens that should be tracked by the driver
+#define MAX_TOKENS 64
 
 enum TokenKind {
     Player1,
@@ -22,6 +26,28 @@ enum TokenKind {
     Sunlight,
     HolyWater,
 };
+
+struct Token {
+    enum TokenKind kind;
+    enum RoomName room;
+};
+
+/**
+ * @brief Get a list of the currently tracked tokens and their positions
+ *
+ * Tokens will be output in an arbitrary order.
+ *
+ * @param[out] tokens
+ * @parblock
+ * A pointer to a list of tokens to be written to.
+ *
+ * The list must have space for at least MAX_TOKENS tokens, otherwise a buffer
+ * overflow may occur.
+ * @endparblock
+ *
+ * @return The number of tokens written
+ */
+int rfid_get_tokens(struct Token *tokens);
 
 /**
  * @brief The rfid thread handling I/O from rfid readers.
