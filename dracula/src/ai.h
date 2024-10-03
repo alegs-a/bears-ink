@@ -33,7 +33,7 @@
 struct GameState {
     // Rooms that all of the players are in. If two players are in the same
     // room, include that room twice. (that is, counted with mulitplicity)
-    struct RoomBuffer all_player_positions;
+    struct RoomBuffer player_positions;
     // Just those rooms containing players who can be bitten (counted with
     // multiplicity)
     struct RoomBuffer can_bite_player_positions;
@@ -71,6 +71,6 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites);
  *
  * @return true if and only if Dracula is present in the given room.
  */
-bool dracula_is_present(const Room room);
+bool dracula_is_present(Room *room);
 
 #endif // AI_H

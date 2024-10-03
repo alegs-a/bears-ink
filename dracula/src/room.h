@@ -45,7 +45,7 @@ typedef struct {
 
 // Buffer of rooms
 struct RoomBuffer {
-    Room *rooms; // array of rooms
+    Room **rooms; // array of rooms
     size_t length; // number of rooms in the buffer.
 };
 
@@ -67,7 +67,7 @@ struct RoomBuffer {
  * @param[in,out] buf : the buffer to which to add the room
  * @param[in] room : the room to be added
  */
-void add_with_duplicate(struct RoomBuffer *buf, const Room room);
+void add_with_duplicate(struct RoomBuffer *buf, Room *room);
 
 /**
  * @brief Add the room to the room buffer if it is not there already.
@@ -77,7 +77,7 @@ void add_with_duplicate(struct RoomBuffer *buf, const Room room);
  *
  * @note Assume that buff has enough memory allocated for an extra room.
  */
-void add_no_duplicate(struct RoomBuffer *const buff, const Room room);
+void add_no_duplicate(struct RoomBuffer *buff, Room *room);
 
 /**
  * @brief Append those rooms from src to the buffer dst that are not already
@@ -96,7 +96,7 @@ void concat_no_duplicate(struct RoomBuffer *dst, const struct RoomBuffer src);
  * @param[in,out] buf : the buffer from which to remove the room
  * @param[in] room : the room to remove
  */
-void remove_if_present(struct RoomBuffer *buf, const Room room);
+void remove_if_present(struct RoomBuffer *buf, const Room *room);
 
 /**
  * @brief Give the index of the supplied room inside the room buffer
@@ -105,7 +105,7 @@ void remove_if_present(struct RoomBuffer *buf, const Room room);
  *
  * @return the index of the room in the buffer if present. Otherwise, return -1
  */
-int contains_room(const struct RoomBuffer buff, const Room room);
+int contains_room(const struct RoomBuffer buff, const Room *room);
 
 /**
  * @brief Replace dst with the same rooms and length as src.
@@ -138,6 +138,6 @@ void remove_duplicate_rooms(struct RoomBuffer *buf);
  */
 struct RoomBuffer room_buffer_from(
         const struct RoomBuffer buff,
-        Room *const arr);
+        Room **arr);
 
 #endif // ROOM_H
