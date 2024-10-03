@@ -2,6 +2,7 @@
 #define AI_H
 
 #include "room.h"
+#include "dracula.h"
 #include <stdbool.h>
 
 
@@ -31,6 +32,10 @@
 
 // NOTE: have updated this to have two separate buffers for player positions
 struct GameState {
+    struct Player *players;
+    uint8_t player_health;
+    uint8_t garlic;
+    uint8_t dracula_health;
     // Rooms that all of the players are in. If two players are in the same
     // room, include that room twice. (that is, counted with mulitplicity)
     struct RoomBuffer player_positions;

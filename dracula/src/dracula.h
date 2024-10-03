@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "room.h"
+#include "ai.h"
 
 // The stack size of the dracula thread.
 #define DRACULA_THREAD_STACK_SIZE 2048
@@ -11,21 +13,25 @@
 // The thread priority of the dracula logic.
 #define DRACULA_THREAD_PRIORITY 5
 
-#define INIT_WATER 2
-#define INIT_LIGHT 3
-#define MAX_WATER 3
-#define MAX_LIGHT 3
-#define MAX_GARLIC 4
-#define PLAYER_HEALTH 5
+#define INIT_WATER 2 // The starting number of water for each player
+#define MAX_WATER 3 // The maximum number of water
 
-#define DRACULA_HEALTH 3
-#define DRACULA_MOVES 3
+#define INIT_LIGHT 3 // The starting number of light for each player
+#define MAX_LIGHT 3 // The maximum number of light
 
-#define PLAYER_COUNT 4
-#define ROOM_COUNT 21
+#define PLAYER_HEALTH 5 // The starting health of the players
+#define MAX_GARLIC 4 // The total number of garlica for each turn
 
-// All possible actions the player can do
-enum player_actions {
+#define DRACULA_HEALTH 3 // The starting health of dracula
+#define DRACULA_MOVES 3 // The number of moves dracula can make per turn
+
+#define PLAYER_COUNT 4 // The number of players in the game
+#define ROOM_COUNT 21 // The number of rooms in the game
+
+/**
+ * @brief All possible player actions.
+ */
+enum Action {
     MOVE,
     WATER,
     LIGHT,
@@ -33,67 +39,22 @@ enum player_actions {
     END
 };
 
-// All room names
-enum room_name {
-    NHALL,
-    TOMB,
-    GUARDEDWAY,
-    GALLERY,
-    ALLEY,
-    BONEPIT,
-    ENTRANCE,
-    VENT,
-    DUNGEON,
-    DINING,
-    LIBRARY,
-    CRYPT,
-    PASSAGE,
-    CHAPEL,
-    NEST,
-    BATHROOM,
-    CANAL,
-    STAIRCASE,
-    CELLAR,
-    SHALL,
-    BALLROOM
+/**
+ * @brief Stores a single turn action.
+ */
+struct Turn {
+    enum Action action;
+    enum RoomName room_name;
 };
 
-// Information about a single turn action
-struct turn {
-    enum player_actions action;
-    enum room_name room_name;
-};
-
-// Defines connections between rooms
-struct room {
-    enum room_name name;
-    struct room_buffer *adjacent;
-};
-
-// A buffer of room
-struct room_buffer {
-    struct room **rooms;
-    size_t length;
-};
-
-// Information unique to each player
-struct player {
+/**
+ * @brief Information that is unique to each player.
+ */
+struct Player {
     uint8_t num_water;
     uint8_t num_light;
-    struct room *room;
     bool turn_skipped;
 };
-
-// Information about the current game state
-struct gamestate {
-    struct player *players;
-    uint8_t player_health;
-    uint8_t garlic;
-    uint8_t dracula_health;
-    bool can_bite;
-};
-
-bool dracula_init();
 
 void dracula_main(void *, void *, void *);
 
