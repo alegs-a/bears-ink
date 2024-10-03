@@ -28,11 +28,25 @@
 		bearsink,room = "NHALL";
 	};
 
+	rfid@2d {
+		compatible = "nxp,mfrc522";
+		reg = <0x2d>;
+		status = "disabled";
+		bearsink,room = "TOMB";
+	};
+
 	rfid@2e {
 		compatible = "nxp,mfrc522";
 		reg = <0x2e>;
 		status = "disabled";
 		bearsink,room = "GUARDEDWAY";
+	};
+
+	rfid@2f {
+		compatible = "nxp,mfrc522";
+		reg = <0x2f>;
+		status = "disabled";
+		bearsink,room = "GALLERY";
 	};
 };
 

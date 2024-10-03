@@ -55,7 +55,7 @@ int mfrc522_init(const struct device *dev)
         return -ENODEV;
     }
 
-    mfrc522.PCD_SetAntennaGain(0x50);
+    mfrc522.PCD_SetAntennaGain(0x30);
 
     return 0;
 }
