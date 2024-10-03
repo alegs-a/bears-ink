@@ -1,4 +1,5 @@
 #include "rfid.h"
+#include "buzzer.h"
 #include "room.h"
 #include "MFRC522_I2C.h"
 
@@ -14,6 +15,8 @@
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(mfrc522, CONFIG_I2C_LOG_LEVEL);
+
+void rfid_main(void *, void *, void *);
 
 // Thread running the rfid driver.
 static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
@@ -128,6 +131,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // Read the new card's UID into mfrc522.uid
     if (!mfrc522.PICC_ReadCardSerial()) {
+        buzzer_send(READ_ERROR);
         return;
     }
 
@@ -151,6 +155,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // Make sure it's a Bears Ink token
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
+        buzzer_send(READ_ERROR);
         printk("Unrecognised token:\n");
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         return;
@@ -167,6 +172,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // Make sure it's a Dracula game token
     if (strncmp(game, "/dracula/", 9) != 0) {
+        buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token: %s\n", game);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         return;
@@ -197,10 +203,13 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         token_kind = HolyWater;
         printk("Found Bears Ink token in room %s: HolyWater\n", room->room_name);
     } else {
+        buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         return;
     }
+
+    buzzer_send(READ_OK);
 
     // We've found a valid token; add it to currentTokens
     k_mutex_lock(&tokensMutex, K_FOREVER);

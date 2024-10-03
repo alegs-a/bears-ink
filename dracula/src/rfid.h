@@ -6,6 +6,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include "buzzer.h"
 #include "room.h"
 
 // The stack size of the rfid thread.
