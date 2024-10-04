@@ -35,7 +35,8 @@ static Room rooms[ROOM_COUNT] = {
     {.room=BALLROOM, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[DINING], &rooms[GALLERY], &rooms[STAIRCASE]}[0]}}
 };
 
-static void player_turn(uint8_t player, struct GameState *gamestate);
+static void full_dracula_turn(struct GameState *gamestate);
+static void full_players_turn(struct GameState *gamestate);
 
 /**
  * @brief Runs the game.
@@ -48,10 +49,12 @@ void dracula_main(void *, void *, void *) {
         {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
         {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true}
     };
+
+    //Initialise player positions
     struct RoomBuffer player_pos = {.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
         {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
 
-    // Initialise game state
+    // Initialise gamestate
     struct GameState gamestate = {.player_health=PLAYER_HEALTH, 
         .garlic=MAX_GARLIC, .dracula_health=DRACULA_HEALTH, .can_bite=true, 
         .players=&players[0], .player_positions=player_pos,
@@ -61,40 +64,8 @@ void dracula_main(void *, void *, void *) {
 
     // Main Game Loop
     for (;;) {
-        // Player's turn
-        gamestate.garlic = MAX_GARLIC;
-        gamestate.can_bite_player_positions.length = 0;
-        for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
-            player_turn(i, &gamestate);
-            if (gamestate.players[i].can_bite) {
-                add_with_duplicate(&gamestate.can_bite_player_positions, gamestate.player_positions.rooms[i]);
-            }
-            if (gamestate.dracula_health <= 0) {
-                break;
-            } 
-        }
-
-        //Dracula's turn
-        struct RoomBuffer bites = {.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]};
-        dracula_turn(&gamestate, &bites);
-        if (bites.length != 0) {
-            gamestate.player_health--;
-            for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
-                for (uint8_t j = 0; j < bites.length; j++) {
-                    if (gamestate.player_positions.rooms[i]->room == bites.rooms[j]->room) {
-                        gamestate.players[i].turn_skipped = true;
-                        if (gamestate.players[i].num_water > 0) {
-                            gamestate.players[i].num_water--;   
-                        }
-                        // printf("Player %d has been bitten and loses one water. Player's now have %d health.\n", i,  gamestate.player_health);
-                        break;
-                    }               
-                }
-            }
-        }    
-        gamestate.can_bite = true; 
-        gamestate.sunlights_from.length = 0;
-        gamestate.sunlights_to.length = 0;
+        full_players_turn(&gamestate);
+        full_dracula_turn(&gamestate);
 
         //Handle game ending
         if (gamestate.player_health <= 0) {
@@ -350,4 +321,62 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
             player_moved = true;
         }
     }
+}
+
+/**
+ * @brief Handles all the players turns for the current round.
+ * 
+ * Updates gamestate garlic numbers and player positions first, 
+ * then iteratively runs each player's turn.
+ *
+ * @param gamestate The current board gamestate.
+ */
+static void full_players_turn(struct GameState *gamestate) {
+    gamestate->garlic = MAX_GARLIC;
+    gamestate->can_bite_player_positions.length = 0;
+    for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
+        player_turn(i, gamestate);
+        if (gamestate->players[i].can_bite) {
+            add_with_duplicate(&(gamestate->can_bite_player_positions), gamestate->player_positions.rooms[i]);
+        }
+        // Checks if the game is over
+        if (gamestate->dracula_health <= 0) {
+            break;
+        } 
+    }
+}
+
+/**
+ * @brief Handles Dracula's turn.
+ * 
+ * Retrieves information from the Dracula AI model where each bite occured.
+ * Each bite then gets applied to each player if they were in that room.
+ *
+ * @param gamestate The current board gamestate.
+ */
+static void full_dracula_turn(struct GameState *gamestate) {
+    struct RoomBuffer bites = {.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]};
+    dracula_turn(gamestate, &bites);
+    
+    // Applies the bites to each player when applicable
+    if (bites.length != 0) {
+        gamestate->player_health--;
+        for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
+            for (uint8_t j = 0; j < bites.length; j++) {
+                if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
+                    gamestate->players[i].turn_skipped = true;
+
+                    // Players lose one water per bite
+                    if (gamestate->players[i].num_water > 0) {
+                        gamestate->players[i].num_water--;   
+                    }
+                    // printf("Player %d has been bitten and loses one water. Player's now have %d health.\n", i,  gamestate.player_health);
+                    break;
+                }               
+            }
+        }
+    }    
+    gamestate->can_bite = true; 
+    gamestate->sunlights_from.length = 0;
+    gamestate->sunlights_to.length = 0;
 }
