@@ -241,6 +241,7 @@ static bool bite(
     struct RoomBuffer bites_copy;       Room *bites_buf[NUM_PLAYERS];
     struct RoomBuffer ending_copy;      Room *ending_buf[NUM_PLAYERS];
     bites_copy.rooms = bites_buf;
+    ending_copy.rooms = ending_buf;
     for (int i = 0; i < st->can_bite_player_positions.length; i++) {
         start_copy = room_buffer_from(dracula_state, start_buf);
         positions_copy = room_buffer_from(st->can_bite_player_positions, positions_buf);

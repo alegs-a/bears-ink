@@ -37,7 +37,7 @@ static void full_players_turn(struct GameState *gamestate);
 /**
  * @brief Runs the game.
  */
-int main() {
+int main(void) {
     dracula_setup();
 
     // Initialise players
@@ -103,16 +103,16 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
  * @returns A the current turn action which conatins the action to do and 
  * which room it will take place in.
  */
-static struct Turn player_input() {
+static struct Turn player_input(void) {
     // TODO make input from RFID readers instead of scanf
     char action[3];
     printf("Input Action:\n");
-    scanf("%s", &action);
+    scanf("%s", action);
     uint8_t action_val = atoi(action);
 
     char room[2];
     printf("Input Room:\n");
-    scanf("%s", &room);
+    scanf("%s", room);
     uint8_t room_val = atoi(room);
 
     return (struct Turn){.action=action_val, .room_name=room_val};
@@ -131,7 +131,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         // TODO make input from RFID readers instead of scanf
         char resource[3];
         printf("Choose Resource:\n");
-        scanf("%s", &resource);
+        scanf("%s", resource);
         int resource_val = atoi(resource);
 
         if (resource_val == WATER) {
@@ -243,7 +243,7 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
     }
 
     if (dracula_is_present(&rooms[room])) {
-        printf("Dracula is in that room with %s health.\n", gamestate->dracula_health);
+        printf("Dracula is in that room with %d health.\n", gamestate->dracula_health);
     } else {
         printf("Dracula is not in that room.\n");
     }
