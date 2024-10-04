@@ -6,15 +6,23 @@
 
 #define ASSERT(b, err_str) if (!(b)) fprintf(stderr, "Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
 
+
 // number of rounds since the last time Dracula bit a player
-static int last_bite = 0; // needs to start at 0 for algos to work
+static int last_bite;
 // number of rounds since the last players received POSITIVE information on Dracula's position
-static int last_info = 0; // Players know Dracula's starting position
+static int last_info;
 // Distribution of rooms where Dracula could be
-static Room *dracula_rooms[NUM_ROOMS]; // allocate on the stack
-// TODO: initialize dracula_rooms here
-// *dracula_rooms = all_rooms[DUNGEON];
-static struct RoomBuffer dracula_state = { .rooms = dracula_rooms, .length = 1 };
+static Room *dracula_rooms[NUM_ROOMS];
+static struct RoomBuffer dracula_state;
+
+
+void dracula_setup(void) {
+    last_bite = 0; // needs to start at 0 for algos to work
+    last_info = 0; // Players know Dracula's starting position
+    dracula_rooms[0] = &rooms[DUNGEON];
+    dracula_state.length = 1;
+    dracula_state.rooms = dracula_rooms;
+}
 
 /*
  * @brief Find the the rooms that can be reached in AT MOST length number of

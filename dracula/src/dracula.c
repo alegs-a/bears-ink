@@ -11,7 +11,7 @@
 extern const k_tid_t dracula_thread_id;
 
 // Intialise rooms and connections
-static Room rooms[ROOM_COUNT] = {
+Room rooms[ROOM_COUNT] = {
     {.room=NHALL, .adjacent=&(struct RoomBuffer){.length=2, .rooms=&(Room*[2]){&rooms[TOMB], &rooms[ENTRANCE]}[0]}},
     {.room=TOMB, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[BONEPIT]}[0]}},
     {.room=GUARDEDWAY, .adjacent=&(struct RoomBuffer){.length=2, .rooms=&(Room*[2]){&rooms[GALLERY], &rooms[TOMB]}[0]}},
@@ -42,6 +42,9 @@ static void full_players_turn(struct GameState *gamestate);
  * @brief Runs the game.
  */
 void dracula_main(void *, void *, void *) {
+    // Initialise the AI
+    dracula_setup();
+
     // Initialise players
     struct Player players[PLAYER_COUNT] = {
         {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},

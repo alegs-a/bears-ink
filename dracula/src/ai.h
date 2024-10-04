@@ -59,6 +59,12 @@ struct GameState {
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
+ * @brief Call this at the start of a game to setup the intial internal Dracula
+ * AI state.
+ */
+void dracula_setup(void);
+
+/**
  * @brief Dracula completes his turn and updates his internal state. Write to
  * bites the rooms that Dracula bites players in.
  *

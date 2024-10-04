@@ -57,6 +57,8 @@ struct Player {
     bool can_bite;
 };
 
+extern Room rooms[NUM_ROOMS];
+
 void dracula_main(void *, void *, void *);
 
 #endif // DRACULA_H
