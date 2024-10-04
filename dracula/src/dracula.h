@@ -54,6 +54,7 @@ struct Player {
     uint8_t num_water;
     uint8_t num_light;
     bool turn_skipped;
+    bool can_bite;
 };
 
 void dracula_main(void *, void *, void *);

@@ -43,12 +43,11 @@ static void player_turn(uint8_t player, struct GameState *gamestate);
 void dracula_main(void *, void *, void *) {
     // Initialise players
     struct Player players[PLAYER_COUNT] = {
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false}
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true}
     };
-    // TODO Change players to true starting places
     struct RoomBuffer player_pos = {.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
         {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
 
@@ -63,12 +62,14 @@ void dracula_main(void *, void *, void *) {
     // Main Game Loop
     for (;;) {
         // Player's turn
-        bool players_win = false;
         gamestate.garlic = MAX_GARLIC;
+        gamestate.can_bite_player_positions.length = 0;
         for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
             player_turn(i, &gamestate);
+            if (gamestate.players[i].can_bite) {
+                add_with_duplicate(&gamestate.can_bite_player_positions, gamestate.player_positions.rooms[i]);
+            }
             if (gamestate.dracula_health <= 0) {
-                players_win = true;
                 break;
             } 
         }
@@ -100,7 +101,7 @@ void dracula_main(void *, void *, void *) {
             //TODO handle game loss
             // printf("Dracula wins!");
             break;
-        } else if (players_win) {
+        } else if (gamestate.dracula_health <= 0) {
             //TODO handle game win
             // printf("Player's win!");
             break;
@@ -315,8 +316,12 @@ static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomNa
  * @param gamestate The current board gamestate.
  */
 static void player_turn(uint8_t player, struct GameState *gamestate) {
+     if (!gamestate->players[player].can_bite) {
+        gamestate->players[player].can_bite = true;
+    }
     if (gamestate->players[player].turn_skipped) {
         gamestate->players[player].turn_skipped = false;
+        gamestate->players[player].can_bite = false;
         return;
     }
     // printf("Player %d's turn.\n", player);
