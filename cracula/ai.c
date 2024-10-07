@@ -12,7 +12,7 @@ static int last_bite;
 // number of rounds since the last players received POSITIVE information on Dracula's position
 static int last_info;
 // Distribution of rooms where Dracula could be
-static Room *dracula_rooms[NUM_ROOMS];
+static Room **dracula_rooms;
 static struct RoomBuffer dracula_state;
 
 
@@ -28,6 +28,7 @@ void print_room_buffer(const struct RoomBuffer buf) {
 void dracula_setup(void) {
     last_bite = 0; // needs to start at 0 for algos to work
     last_info = 0; // Players know Dracula's starting position
+    dracula_rooms = malloc(NUM_ROOMS * sizeof(Room*));
     dracula_rooms[0] = &rooms[DUNGEON];
     dracula_state.length = 1;
     dracula_state.rooms = dracula_rooms;
@@ -83,7 +84,7 @@ static int shortest_walk(
 
     // distribution is the rooms within num_moves of starting. We will mutate
     // this, so make sure we don't mess with starting
-    Room *room_arr[NUM_ROOMS];
+    Room **room_arr = malloc(NUM_ROOMS * sizeof(Room*));
     struct RoomBuffer distribution = room_buffer_from(starting, room_arr);
 
     for (int num_moves = 0; num_moves <= DRACULA_MOVES; num_moves++) {
@@ -114,7 +115,7 @@ static int turn_starts(const struct GameState *st) {
     // Dracula is not in any room with sunlight
     if (dracula_state.length > 1 || sunlight_index < 0) return DRACULA_MOVES;
 
-    Room *innacc_buf[NUM_PLAYERS + 1];
+    Room **innacc_buf = malloc(NUM_PLAYERS * sizeof(Room*));
     struct RoomBuffer innaccessible = room_buffer_from(st->sunlights_to, innacc_buf);
     add_no_duplicate(&innaccessible, st->sunlights_from.rooms[sunlight_index]);
     walk_ends(innaccessible, 1, &dracula_state);
@@ -154,7 +155,7 @@ static void best_bite(
         ) {
 
     // Compute innaccessible rooms for this step
-    Room *inacc_buf[2*NUM_PLAYERS];
+    Room **inacc_buf = malloc(2*NUM_PLAYERS * sizeof(Room*));
     struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, inacc_buf);
     remove_if_present(&player_positions, bite_in);
     concat_no_duplicate(&innacc, player_positions);
@@ -173,7 +174,7 @@ static void best_bite(
     ending_distribution->length = 1;
     walk_ends(innacc, remaining_moves, ending_distribution);
     // remove the rooms which are adjacent to some player
-    Room *adj_buf[MAX_ADJ];
+    Room **adj_buf = malloc(MAX_ADJ * sizeof(Room*));
     struct RoomBuffer unsafe; unsafe.rooms = adj_buf;
     for (int i = 0; i < st->player_positions.length; i++) {
         unsafe.rooms[0] = st->player_positions.rooms[i];
@@ -185,9 +186,12 @@ static void best_bite(
     }
 
     // Bite another player on this turn
-    struct RoomBuffer positions_copy;   Room *positions_buf[NUM_PLAYERS];
-    struct RoomBuffer bites_copy;       Room *bites_buf[NUM_PLAYERS];
-    struct RoomBuffer ending_copy;      Room *ending_buf[NUM_ROOMS];
+    Room **positions_buf = malloc(NUM_PLAYERS * sizeof(Room*));
+    Room **bites_buf = malloc(NUM_PLAYERS * sizeof(Room*));
+    Room **ending_buf = malloc(NUM_ROOMS * sizeof(Room*));
+    struct RoomBuffer positions_copy;
+    struct RoomBuffer bites_copy;
+    struct RoomBuffer ending_copy;
     ending_copy.rooms = ending_buf;
     for (int i = 0; i < player_positions.length; i++) {
         // setup start
@@ -257,10 +261,14 @@ static bool bite(
     *score = 1;
 
     // In-place sort of best bite option
-    struct RoomBuffer start_copy;       Room *start_buf[NUM_ROOMS];
-    struct RoomBuffer positions_copy;   Room *positions_buf[NUM_PLAYERS];
-    struct RoomBuffer bites_copy;       Room *bites_buf[NUM_PLAYERS];
-    struct RoomBuffer ending_copy;      Room *ending_buf[NUM_ROOMS];
+    Room **start_buf = malloc(NUM_ROOMS * sizeof(Room*));
+    Room **positions_buf = malloc(NUM_PLAYERS * sizeof(Room*));
+    Room **bites_buf = malloc(NUM_PLAYERS * sizeof(Room*));
+    Room **ending_buf = malloc(NUM_ROOMS * sizeof(Room*));
+    struct RoomBuffer start_copy;
+    struct RoomBuffer positions_copy;
+    struct RoomBuffer bites_copy;
+    struct RoomBuffer ending_copy;
     bites_copy.rooms = bites_buf;
     ending_copy.rooms = ending_buf;
     for (int i = 0; i < st->can_bite_player_positions.length; i++) {
@@ -311,14 +319,14 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
 
     // Run the heuristic
     float bite_score;
-    Room *ending[NUM_ROOMS];
+    Room **ending = malloc(sizeof(Room*) * NUM_ROOMS);
     struct RoomBuffer ending_distribution;
     ending_distribution.rooms = ending;
     bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
 
     if (!can_bite || bite_score > bite_roll || !(st->can_bite)) { // no bite
         // update Dracula's state
-        Room *innacc_buf[2*NUM_PLAYERS];
+        Room **innacc_buf = malloc(2*NUM_PLAYERS * sizeof(Room*));
         struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, innacc_buf);
         concat_no_duplicate(&innacc, st->can_bite_player_positions);
         walk_ends(innacc, num_moves, &dracula_state);
@@ -339,6 +347,7 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     printf("Dracula state:\n");
     print_room_buffer(dracula_state);
     #endif
+    free(ending);
 }
 
 
