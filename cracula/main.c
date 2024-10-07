@@ -386,17 +386,17 @@ static void full_dracula_turn(struct GameState *gamestate) {
     
     // Applies the bites to each player when applicable
     if (bites.length != 0) {
-        gamestate->player_health--;
         for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
             for (uint8_t j = 0; j < bites.length; j++) {
                 if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
                     gamestate->players[i].turn_skipped = true;
+                    gamestate->player_health--;
 
                     // Players lose one water per bite
                     if (gamestate->players[i].num_water > 0) {
                         gamestate->players[i].num_water--;   
                     }
-                    printf("Player %d has been bitten and loses one water. Player's now have %d health.\n", i,  gamestate->player_health);
+                    printf("Player %d has been bitten and loses one water. Players now have %d health.\n", i,  gamestate->player_health);
                     break;
                 }               
             }
