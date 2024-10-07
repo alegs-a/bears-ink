@@ -2,8 +2,8 @@
 #define AI_H
 
 #include "room.h"
-#include "main.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,6 +63,12 @@ struct GameState {
  * AI state.
  */
 void dracula_setup(void);
+
+/**
+ * @brief Call this a the end of a game for Dracula to free any resources used
+ * before the next run.
+ */
+void dracula_cleanup(void);
 
 /**
  * @brief Dracula completes his turn and updates his internal state. Write to

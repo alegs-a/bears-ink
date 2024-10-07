@@ -1,4 +1,5 @@
 #include "main.h"
+#include "ai.h"
 
 // static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
 //     dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
@@ -102,6 +103,9 @@ int main(void) {
             break;
         }
     }
+
+    dracula_cleanup();
+
     return 0;
 }
 
