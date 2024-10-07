@@ -16,6 +16,15 @@ static Room *dracula_rooms[NUM_ROOMS];
 static struct RoomBuffer dracula_state;
 
 
+#ifdef DEBUG
+void print_room_buffer(const struct RoomBuffer buf) {
+    for (int i = 0; i < buf.length; i++) {
+        printf("%d\n", buf.rooms[i]->room);
+    }
+    printf("\n");
+}
+#endif
+
 void dracula_setup(void) {
     last_bite = 0; // needs to start at 0 for algos to work
     last_info = 0; // Players know Dracula's starting position
@@ -206,6 +215,15 @@ static void best_bite(
 
 
 /**
+ * @brief Return a random floating point number between 0 and 1 (that is, sample
+ * the standard uniform distribution)
+ */
+static inline float std_unif(void) {
+    return (float)rand() / (float)RAND_MAX;
+}
+
+
+/**
  * @brief Supposing Dracula must bite a player on his turn, determine the bite
  *  he will make on his turn using random weights and heuristics for number of
  *  players bitten, number of safe rooms in which to end the turn. If Dracula
@@ -260,7 +278,7 @@ static bool bite(
         // Don't round the score to 0 here - we want to compare the best way to
         // bite more than one player
         float safe = ending_copy.length ? ending_copy.length : 1;
-        safe = rand() / safe;
+        safe = std_unif() / safe;
 
         // in-place lex comparison - smaller score is better
         if (bites_copy.length > bites->length
@@ -280,7 +298,7 @@ static bool bite(
 void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     last_bite++;
     last_info++;
-    float bite_roll = ((float)last_bite / (float)WITHOUT_BITE) * rand();
+    float bite_roll = ((float)last_bite / (float)WITHOUT_BITE) * std_unif();
     int num_moves = turn_starts(st);
     bites->length = 0;
 
@@ -311,6 +329,13 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
         last_bite = 0;
         last_info = 0;
     }
+
+    #ifdef DEBUG
+    printf("Player positions\n");
+    print_room_buffer(st->player_positions);
+    printf("Dracula state:\n");
+    print_room_buffer(dracula_state);
+    #endif
 }
 
 
@@ -322,8 +347,8 @@ bool dracula_is_present(Room *room) {
 
     float info_threshold = (float)last_info / (float)(dracula_state.length * WITHOUT_INFO);
     float bite_threshold = (float)last_bite / (float)(WITHOUT_BITE);
-    float info_roll = rand();
-    float bite_roll = rand();
+    float info_roll = std_unif();
+    float bite_roll = std_unif();
 
     // Information given! update the state and last_info
     if (dracula_state.length == 1 // Dracula necessarily present
@@ -335,5 +360,6 @@ bool dracula_is_present(Room *room) {
     }
 
     remove_if_present(&dracula_state, room);
+
     return false;
 }
