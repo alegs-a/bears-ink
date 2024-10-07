@@ -31,6 +31,32 @@ Room rooms[ROOM_COUNT] = {
     {.room=BALLROOM, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[DINING], &rooms[GALLERY], &rooms[STAIRCASE]}[0]}}
 };
 
+#ifdef DEBUG
+char *room_names[NUM_ROOMS] = {
+    "NHALL",
+    "TOMB",
+    "GUARDEDWAY",
+    "GALLERY",
+    "ALLEY",
+    "BONEPIT",
+    "ENTRANCE",
+    "VENT",
+    "DUNGEON",
+    "DINING",
+    "LIBRARY",
+    "CRYPT",
+    "PASSAGE",
+    "CHAPEL",
+    "NEST",
+    "BATHROOM",
+    "CANAL",
+    "STAIRCASE",
+    "CELLAR",
+    "SHALL",
+    "BALLROOM",
+};
+#endif
+
 static void full_dracula_turn(struct GameState *gamestate);
 static void full_players_turn(struct GameState *gamestate);
 

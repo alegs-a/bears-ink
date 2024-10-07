@@ -63,6 +63,10 @@ struct Player {
 
 extern Room rooms[NUM_ROOMS];
 
+#ifdef DEBUG
+extern char *room_names[NUM_ROOMS];
+#endif
+
 void dracula_main(void *, void *, void *);
 
 #endif // DRACULA_H

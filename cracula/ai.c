@@ -19,7 +19,7 @@ static struct RoomBuffer dracula_state;
 #ifdef DEBUG
 void print_room_buffer(const struct RoomBuffer buf) {
     for (int i = 0; i < buf.length; i++) {
-        printf("%d\n", buf.rooms[i]->room);
+        printf("%s\n", room_names[buf.rooms[i]->room]);
     }
     printf("\n");
 }
@@ -220,6 +220,8 @@ static void best_bite(
  * the standard uniform distribution)
  */
 static inline float std_unif(void) {
+    // TODO: convert to Zephyr api
+    // https://docs.zephyrproject.org/latest/doxygen/html/group__random__api.html
     return (float)rand() / (float)RAND_MAX;
 }
 
