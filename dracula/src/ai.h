@@ -2,8 +2,8 @@
 #define AI_H
 
 #include "room.h"
-#include "dracula.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -33,9 +33,9 @@
 // NOTE: have updated this to have two separate buffers for player positions
 struct GameState {
     struct Player *players;
-    uint8_t player_health;
+    int8_t player_health;
     uint8_t garlic;
-    uint8_t dracula_health;
+    int8_t dracula_health;
     // Rooms that all of the players are in. If two players are in the same
     // room, include that room twice. (that is, counted with mulitplicity)
     struct RoomBuffer player_positions;
@@ -63,6 +63,12 @@ struct GameState {
  * AI state.
  */
 void dracula_setup(void);
+
+/**
+ * @brief Call this a the end of a game for Dracula to free any resources used
+ * before the next run.
+ */
+void dracula_cleanup(void);
 
 /**
  * @brief Dracula completes his turn and updates his internal state. Write to

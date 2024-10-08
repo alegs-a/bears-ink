@@ -33,7 +33,7 @@ enum RoomName {
     CELLAR,
     SHALL,
     BALLROOM,
-    MAXIMUM_ROOM
+    NUM_ROOMS
 };
 
 // Room type. Prefer to pass this around over room names so that we can use the
@@ -51,7 +51,6 @@ struct RoomBuffer {
 
 #define EMPTY_BUFFER (struct RoomBuffer){ .rooms = NULL, .length = 0 }
 
-#define NUM_ROOMS 21 // total number of rooms
 #define MAX_ADJ   4  // the maximum number of rooms that can be adjacent to any
                      // given room
 

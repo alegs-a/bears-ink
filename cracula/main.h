@@ -9,6 +9,8 @@
 #include "room.h"
 #include "ai.h"
 
+#define DEBUG
+
 // The stack size of the dracula thread.
 #define DRACULA_THREAD_STACK_SIZE 2048
 
@@ -60,6 +62,10 @@ struct Player {
 };
 
 extern Room rooms[NUM_ROOMS];
+
+#ifdef DEBUG
+extern char *room_names[NUM_ROOMS];
+#endif
 
 void dracula_main(void *, void *, void *);
 
