@@ -1,4 +1,6 @@
 #include "dracula.h"
+#include "ai.h"
+#include "room.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/mutex.h>
@@ -34,6 +36,32 @@ Room rooms[ROOM_COUNT] = {
     {.room=SHALL, .adjacent=&(struct RoomBuffer){.length=2, .rooms=&(Room*[2]){&rooms[PASSAGE], &rooms[CELLAR]}[0]}},
     {.room=BALLROOM, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[DINING], &rooms[GALLERY], &rooms[STAIRCASE]}[0]}}
 };
+
+#ifdef DEBUG
+char *room_names[NUM_ROOMS] = {
+    "NHALL",
+    "TOMB",
+    "GUARDEDWAY",
+    "GALLERY",
+    "ALLEY",
+    "BONEPIT",
+    "ENTRANCE",
+    "VENT",
+    "DUNGEON",
+    "DINING",
+    "LIBRARY",
+    "CRYPT",
+    "PASSAGE",
+    "CHAPEL",
+    "NEST",
+    "BATHROOM",
+    "CANAL",
+    "STAIRCASE",
+    "CELLAR",
+    "SHALL",
+    "BALLROOM",
+};
+#endif
 
 static void full_dracula_turn(struct GameState *gamestate);
 static void full_players_turn(struct GameState *gamestate);
@@ -81,6 +109,8 @@ void dracula_main(void *, void *, void *) {
             break;
         }
     }
+
+    dracula_cleanup();
 }
 
 /**
@@ -107,7 +137,7 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
  * @returns A the current turn action which conatins the action to do and 
  * which room it will take place in.
  */
-static struct Turn player_input() {
+static struct Turn player_input(void) {
     // TODO make input from RFID readers instead of scanf
     //char action[3];
     // printf("Input Action:\n");
@@ -363,11 +393,11 @@ static void full_dracula_turn(struct GameState *gamestate) {
     
     // Applies the bites to each player when applicable
     if (bites.length != 0) {
-        gamestate->player_health--;
         for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
             for (uint8_t j = 0; j < bites.length; j++) {
                 if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
                     gamestate->players[i].turn_skipped = true;
+                    gamestate->player_health--;
 
                     // Players lose one water per bite
                     if (gamestate->players[i].num_water > 0) {

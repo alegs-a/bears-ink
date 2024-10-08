@@ -10,7 +10,7 @@ inline void add_with_duplicate(struct RoomBuffer *buf, Room *room) {
 
 // Need to pass a pointer so that we can update the length of the buffer
 void add_no_duplicate(struct RoomBuffer *buff, Room *room) {
-    if (!contains_room(*buff, room)) add_with_duplicate(buff, room);
+    if (contains_room(*buff, room) < 0) add_with_duplicate(buff, room);
 }
 
 
@@ -25,7 +25,7 @@ void remove_if_present(struct RoomBuffer *buf, const Room *room) {
     int i = contains_room(*buf, room);
     while (i >= 0) {
         memmove(buf->rooms + i, buf->rooms + i + 1,
-                sizeof(Room) * (buf->length - i - 1));
+                sizeof(Room*) * (buf->length - i - 1));
         buf->length--;
         i = contains_room(*buf, room);
     }
@@ -41,7 +41,7 @@ int contains_room(const struct RoomBuffer buff, const Room *room) {
 
 
 void room_buffer_copy(struct RoomBuffer *dst, const struct RoomBuffer src) {
-    memcpy(dst->rooms, src.rooms, src.length * sizeof(Room));
+    memcpy(dst->rooms, src.rooms, src.length * sizeof(Room*));
     dst->length = src.length;
 }
 
