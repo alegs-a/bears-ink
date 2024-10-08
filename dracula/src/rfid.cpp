@@ -262,7 +262,7 @@ void detect_current_cards(MFRC522 mfrc522)
         if (result == MFRC522::STATUS_TIMEOUT) {
             // This token probably disappeared; forget about it
             printk("Token %d removed from room %s.\n", currentTokens[i].kind, room->room_name);
-            currentTokens[i].room = MAXIMUM_ROOM;
+            currentTokens[i].room = NUM_ROOMS;
         }
 
         mfrc522.PICC_HaltA();
@@ -278,7 +278,7 @@ int rfid_get_tokens(struct Token *tokens)
 
     int tokenCount = 0;
     for (int i = 0; i < MAX_TOKENS; i++) {
-        if (currentTokens[i].room == MAXIMUM_ROOM) {
+        if (currentTokens[i].room == NUM_ROOMS) {
             // Empty list entry; ignore.
             continue;
         }
