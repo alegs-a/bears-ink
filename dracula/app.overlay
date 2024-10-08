@@ -2,7 +2,6 @@
 
 / {
 	aliases {
-		rfid-i2c = &i2c1;
 		display = &spi1;
 	};
 };
@@ -17,10 +16,41 @@
 	display_cs: display_cs {
 		gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
 	};
+	rfid_buzzer: buzzer {
+		gpios = <&gpioa 8 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &i2c1 {
 	status = "okay";
+
+	rfid@2c {
+		compatible = "nxp,mfrc522";
+		reg = <0x2c>;
+		status = "disabled";
+		bearsink,room = "NHALL";
+	};
+
+	rfid@2d {
+		compatible = "nxp,mfrc522";
+		reg = <0x2d>;
+		status = "disabled";
+		bearsink,room = "TOMB";
+	};
+
+	rfid@2e {
+		compatible = "nxp,mfrc522";
+		reg = <0x2e>;
+		status = "disabled";
+		bearsink,room = "GUARDEDWAY";
+	};
+
+	rfid@2f {
+		compatible = "nxp,mfrc522";
+		reg = <0x2f>;
+		status = "disabled";
+		bearsink,room = "GALLERY";
+	};
 };
 
 &spi1 {

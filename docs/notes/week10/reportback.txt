@@ -1,0 +1,31 @@
+Week: 10
+Date: 04/10/24
+
+Completed Tasks:
+- Dracula AI and game logic implemented in C
+- CAD board
+- FINISHED THE RFID DRIVER (HOPEFULLY)!!!!!!!!
+- Designing the electronics system / ordering and testing parts
+- Can load and display images on the LCD
+
+Current Focus:
+- Buzzer for audio feedback
+- Debugging and testing C code
+- Writing code to interface between the game code and the hardware code
+- Board manufacture
+- Video script and shooting
+- Soldering and assembling electronics, also checking that they work
+- Designing what will be written to the display and writing the code to do this
+- Debouncing the button
+- Combine/overlay images to display both on the LCD concurrently
+
+Upcoming Tasks:
+- Shoot a low-quality draft video
+- LED drivers
+- Make the physical board pieces
+
+Challenges/Roadblocks:
+- Waiting for electronics to ship
+- Fusion360
+- Balancing work on the project with work on other classes.
+- Not knowing the programming languages used

@@ -1,0 +1,11 @@
+compatible: "nxp,mfrc522"
+
+description: MFRC522 RFID/NFC reader accessed through I2C bus
+
+include: [i2c-device.yaml]
+
+properties:
+  bearsink,room:
+    type: string
+    description: room.h room index associated with the reader
+    required: true

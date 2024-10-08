@@ -19,10 +19,6 @@ int main()
         printk("display init failed with %i\n", error);
     }
 
-    error = rfid_init();
-    if (error) {
-        printk("rfid init failed with %i\n", error);
-    }
 
     display_clear(0x00);
     ui_splash();

@@ -113,6 +113,7 @@ The full bill of materials for the electronics is as follows:
 | RFID I2C Bus 500mm                       | [PiicoDev Cable 500mm](https://core-electronics.com.au/piicodev-cable-500mm.html)                                             | 6   | [1.4$ (Core Electronics)](https://core-electronics.com.au/piicodev-cable-500mm.html)                                                                    | 8.40$      |
 | RFID Sensor I2C Breakout                 | [PiicoDev Adaptor for Breadboards](https://core-electronics.com.au/piicodev-breadboard-adapter.html)                          | 6   | [2.61$ (Core Electronics)](https://core-electronics.com.au/piicodev-breadboard-adapter.html)                                                            | 15.66$     |
 | RFID I2C Multiplexer                     | [TCA9548A I2C Multiplexer](https://core-electronics.com.au/tca9548a-i2c-multiplexer.html)                                     | 1   | [13.05$ (Core Electronics)](https://core-electronics.com.au/tca9548a-i2c-multiplexer.html)                                                              | 13.05$     |
+| Piezo Buzzer                             | [Piezo Buzzer](https://core-electronics.com.au/piezo-buzzer.html)                                                             | 1   | [0.46$ (Core Electronics)](https://core-electronics.com.au/piezo-buzzer.html)                                                                           | 0.46$      |
 | Battery                                  | [LiPo Battery 2000mAh](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html)                        | 1   | [17.55$ (Core Electronics)](https://core-electronics.com.au/polymer-lithium-ion-battery-2000mah-38459.html)                                             | 17.55$     |
 | Battery Management 5V Supply             | [SparkFun LiPo Charger/Booster - 5V/1A](https://www.sparkfun.com/products/14411)                                              | 1   | [28.35$ (Core Electronics)](https://core-electronics.com.au/sparkfun-lipo-charger-booster-5v-1a.html)                                                   | 28.35$     |
 | 3.3V Stepdown                            | [SparkFun BabyBuck Regulator Breakout - 3.3V](https://www.sparkfun.com/products/18357)                                        | 1   | [7.30$ (Core Electronics)](https://core-electronics.com.au/sparkfun-babybuck-regulator-breakout-3-3v-ap63203.html)                                      | 7.30$      |
@@ -124,7 +125,7 @@ The full bill of materials for the electronics is as follows:
 | Male Headers                             | [Male Headers 2.56mm](https://core-electronics.com.au/header-male-pin-01x20.html)                                             | 2   | [0.35$ (Core Electronics)](https://core-electronics.com.au/header-male-pin-01x20.html)                                                                  | 0.70$      |
 | Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 2   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
 | Shipping                                 |                                                                                                                               |     |                                                                                                                                                         | 10.20$     |
-| Total Cost                               |                                                                                                                               |     |                                                                                                                                                         | 409.90$    |
+| Total Cost                               |                                                                                                                               |     |                                                                                                                                                         | 410.36$    |
 
 The main microcontroller is an [STM32L432KC](https://www.st.com/en/microcontrollers-microprocessors/stm32l432kc.html)
 on the [Nucleo-L432KC](https://www.st.com/en/evaluation-tools/nucleo-l432kc.html) used as the main board for the system.
@@ -140,8 +141,9 @@ The development board pins can be seen below:
 > [!note]
 > The black button opposite the micro USB port is the reset button.
 
+### 5.1 Display
+
 Connect the following:
-- Display
 
 | Wire Colour | Display Function | Port | Configured As | Board Pin |
 | ----------- | ---------------- | ---- | ------------- | --------- |
@@ -153,6 +155,52 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
+### 5.2 RFID
+
+Connect the following for the RFID readers:
+
+| Wire Colour | I2C Function | Port | Configured As | Board Pin |
+| ----------- | ------------ | ---- | ------------- | --------- |
+| Blue        | Serial data  | PB7  | I2C1 SDA      | D4        |
+| Yellow      | Clock        | PB6  | I2C1 SCL      | D5        |
+| Red         | Power        | -    | 3.3V          | 3V3       |
+| Black       | Ground       | -    | 0V            | GND       |
+
+And the buzzer:
+
+| Function | Port | Board Pin |
+| -------- | ---- | --------- |
+| Buzzer   | PA8  | D9        |
+| Ground   | -    | GND       |
+
+In the [`app.overlay`](/dracula/app.overlay) device tree, configure the `rfid`
+nodes in the `&i2c1` bus. For example:
+
+```dts
+&i2c1 {
+	status = "okay";
+
+	rfid@2c {
+		compatible = "nxp,mfrc522";
+		reg = <0x2c>;
+		status = "okay";
+		bearsink,room = "NHALL";
+	};
+};
+```
+
+Make sure all `status`es are `"okay"`, and change the `reg = <0x2c>;` addresses
+to match your readers, if necessary.
+
+> [!note]
+> Make sure readers on the same bus have different I<sup>2</sup>C addresses from
+> each other; i.e. set the dip switches in different positions. Because the
+> PiicoDev modules support only 4 addresses, 4 is the maximum number of readers
+> per bus.
+
+Change the `bearsink,room` property to the [`enum RoomName`](/dracula/src/room.h)
+value corresponding to the room each reader represents
+
 ## 6. Project Overview
 
 In Dracula, there five top level components:
@@ -160,8 +208,8 @@ In Dracula, there five top level components:
   any tokens placed on top of them. This is implemented at [`rfid.cpp` /
   `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
   [`MFRC522_I2C.cpp`](/dracula/src/MFRC522_I2C.cpp) is from
-  [here](https://github.com/arozcan/MFRC522-I2C-Library) and has been adapted to
-  use Zephyr APIs.
+  [arozcan/MFRC522-I2C-Library](https://github.com/arozcan/MFRC522-I2C-Library)
+  and has been adapted to use Zephyr APIs.
 - **LED Strip** - Used to display user.
 - **OLED Display** - Provides complex information to the users and information
   unable to be conveyed by the LEDs or through game mechanics. Implemented by
@@ -183,6 +231,7 @@ classDiagram
   Dracula <|-- UI
   UI <|-- Display
   Dracula <|-- RFID
+  Dracula <|-- Buzzer
   Dracula <|-- LEDStrip
   class UI {
     ui_splash()
@@ -190,6 +239,12 @@ classDiagram
   class Display {
     display_write()
     display_image()
+  }
+  class RFID {
+    rfid_get_tokens()
+  }
+  class Buzzer {
+    buzzer_send()
   }
 ```
 
@@ -227,11 +282,12 @@ flowchart LR
   - [`app.overlay`](/dracula/app.overlay) - A [DeviceTree](https://docs.zephyrproject.org/latest/build/dts/intro-scope-purpose.html) overlay file that defines and configures the microcontroller hardware including SPI, I2C, GPIO and PWM, to communicate with display, rfid and led strip.
   - [`src`](/dracula/src) - Source code for the project.
     - [`ai.c`](/dracula/src/ai.c) / [`ai.h`](/dracula/src/ai.h) - Implementation of the dracula AI.
+    - [`buzzer.c`](/dracula/src/buzzer.c) / [`buzzer.h`](/dracula/src/buzzer.h) - Dedicated thread controlling the buzzer. (Commands are given to it by the RFID thread)
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
     - [`dracula.c`](/dracula/src/dracula.c) / [`dracula.h`](/dracula/src/dracula.h) - Core game logic implementation.
     - [`font.c`](/dracula/src/font.c) / [`font.h`](/dracula/src/font.h) - Interface for displaying strings on the display.
-    - [`MRFC522_I2C.c`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - 
-    - [`rfid.c`](/dracula/src/rfid.c) / [`rfid.h`](/dracula/src/rfid.h) - Implementation
+    - [`MRFC522_I2C.cpp`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
+    - [`rfid.cpp`](/dracula/src/rfid.cpp) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
     - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Game logic designs in other languages.
@@ -248,7 +304,7 @@ flowchart LR
   - [`west_update.sh`](/scripts/west_update.sh) -
 - [`.gitattributes`](/.gitattributes) - Ensures source files and bash scripts maintain linux LF line endings.
 - [`.gitignore`](/.gitignore) - Ignore file for C and python to prevent build files being committed to git.
-- [`REAMDE.md`](/README.md) - Project documentation.
+- [`README.md`](/README.md) - Project documentation.
 
 ## 8. Using the Display
 
