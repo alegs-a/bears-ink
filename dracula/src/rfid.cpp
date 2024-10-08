@@ -22,7 +22,7 @@ extern const k_tid_t rfid_thread_id;
 MFRC522 mfrc522(0x2c, 3 /* Reset pin */);
 
 struct DraculaToken {
-    enum RoomName room = MAXIMUM_ROOM;
+    enum RoomName room = NUM_ROOMS;
     unsigned char uid[7];
     enum TokenKind kind;
 };
@@ -38,7 +38,7 @@ K_MUTEX_DEFINE(tokensMutex);
  * detected, they are appended to this list and a callback is fired to the game
  * logic. The game logic can also copy this list out with an rfid_ function.
  *
- * Empty entries are marked with a room name of MAXIMUM_ROOM.
+ * Empty entries are marked with a room name of NUM_ROOMS.
  *
  * This list is protected by tokensMutex
  */
@@ -136,7 +136,7 @@ void detect_new_card()
     // We've found a valid token; add it to currentTokens
     k_mutex_lock(&tokensMutex, K_FOREVER);
     for (int i = 0; i < MAX_TOKENS; i++) {
-        if (currentTokens[i].room != MAXIMUM_ROOM) {
+        if (currentTokens[i].room != NUM_ROOMS) {
             // This entry is occupied.
             continue;
         }
@@ -161,7 +161,7 @@ void detect_current_cards()
 {
     k_mutex_lock(&tokensMutex, K_FOREVER);
     for (int i = 0; i < MAX_TOKENS; i++) {
-        if (currentTokens[i].room == MAXIMUM_ROOM) {
+        if (currentTokens[i].room == NUM_ROOMS) {
             // Empty list entry; ignore.
             continue;
         }
@@ -181,7 +181,7 @@ void detect_current_cards()
         if (result == MFRC522::STATUS_TIMEOUT) {
             // This token probably disappeared; forget about it
             printk("Token %d removed. (%d)\n", currentTokens[i].kind, result);
-            currentTokens[i].room = MAXIMUM_ROOM;
+            currentTokens[i].room = NUM_ROOMS;
         }
     }
     k_mutex_unlock(&tokensMutex);

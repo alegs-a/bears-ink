@@ -1,6 +1,6 @@
 #include "ai.h"
 #include "room.h"
-#include "main.h"
+#include "dracula.h"
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdio.h>
