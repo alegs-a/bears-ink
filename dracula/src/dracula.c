@@ -197,6 +197,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
     k_mutex_unlock(&gamestateMutex);
     for(;;) {
         k_msleep(100);
+        printk(".\n");
        // if (button_state()) {
        //     break;
        // }

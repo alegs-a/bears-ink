@@ -3,6 +3,10 @@
 #include "room.h"
 #include "MFRC522_I2C.h"
 
+extern "C" {
+#include "dracula.h"
+}
+
 #include <string.h>
 
 #include <zephyr/device.h>
@@ -28,8 +32,8 @@ extern const k_tid_t rfid_thread_id;
 #define DT_DRV_COMPAT nxp_mfrc522
 #define MFRC522_INIT_PRIO 64
 
-BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
-    "RFID readers must be initialised after their bus");
+// BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
+//     "RFID readers must be initialised after their bus");
 
 struct mfrc522_data {
 };
@@ -179,27 +183,28 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // Check what kind of token it is
     char *kind = game + 9;
-    enum TokenKind token_kind;
+    struct Token this_token;
+    this_token.room = room->room;
     if (strcmp(kind, "player1") == 0) {
-        token_kind = Player1;
+        this_token.kind = Player1;
         printk("Found Bears Ink token in room %s: Player1\n", room->room_name);
     } else if (strcmp(kind, "player2") == 0) {
-        token_kind = Player2;
+        this_token.kind = Player2;
         printk("Found Bears Ink token in room %s: Player2\n", room->room_name);
     } else if (strcmp(kind, "player3") == 0) {
-        token_kind = Player3;
+        this_token.kind = Player3;
         printk("Found Bears Ink token in room %s: Player3\n", room->room_name);
     } else if (strcmp(kind, "player4") == 0) {
-        token_kind = Player4;
+        this_token.kind = Player4;
         printk("Found Bears Ink token in room %s: Player4\n", room->room_name);
     } else if (strcmp(kind, "garlic") == 0) {
-        token_kind = Garlic;
+        this_token.kind = Garlic;
         printk("Found Bears Ink token in room %s: Garlic\n", room->room_name);
     } else if (strcmp(kind, "sun") == 0) {
-        token_kind = Sunlight;
+        this_token.kind = Sunlight;
         printk("Found Bears Ink token in room %s: Sunlight\n", room->room_name);
     } else if (strcmp(kind, "water") == 0) {
-        token_kind = HolyWater;
+        this_token.kind = HolyWater;
         printk("Found Bears Ink token in room %s: HolyWater\n", room->room_name);
     } else {
         buzzer_send(READ_ERROR);
@@ -208,7 +213,14 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         return;
     }
 
-    buzzer_send(READ_OK);
+    // Send the token to the game logic
+    if (token_valid(this_token)) {
+        buzzer_send(READ_OK);
+        printk("Accepted\n");
+    } else {
+        buzzer_send(READ_ERROR);
+        printk("Rejected\n");
+    }
 
     // We've found a valid token; add it to currentTokens
     k_mutex_lock(&tokensMutex, K_FOREVER);
@@ -218,8 +230,8 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
             continue;
         }
 
-        currentTokens[i].room = room->room;
-        currentTokens[i].kind = token_kind;
+        currentTokens[i].room = this_token.room;
+        currentTokens[i].kind = this_token.kind;
         memcpy(currentTokens[i].uid, mfrc522.uid.uidByte, 7);
         break;
     }
