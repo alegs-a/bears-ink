@@ -7,8 +7,8 @@
 #include <zephyr/sys/mutex.h>
 #include <zephyr/sys/printk.h>
 
-// static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
-//     dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
+static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
+     dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
 
 // Defined and initialised be the above macro.
 extern const k_tid_t dracula_thread_id;
@@ -500,7 +500,9 @@ static void full_dracula_turn(struct GameState *gamestate) {
             for (uint8_t j = 0; j < bites.length; j++) {
                 if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
                     gamestate->players[i].turn_skipped = true;
-                    gamestate->player_health--;
+                    if (gamestate->player_health > 0) { 
+                        gamestate->player_health--;
+                    }
 
                     // Players lose one water per bite
                     if (gamestate->players[i].num_water > 0) {
