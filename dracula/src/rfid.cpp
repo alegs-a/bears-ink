@@ -28,8 +28,8 @@ extern const k_tid_t rfid_thread_id;
 #define DT_DRV_COMPAT nxp_mfrc522
 #define MFRC522_INIT_PRIO 64
 
-// BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
-//     "RFID readers must be initialised after their bus");
+BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
+    "RFID readers must be initialised after their bus");
 
 struct mfrc522_data {
 };
@@ -156,8 +156,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Make sure it's a Bears Ink token
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
         buzzer_send(READ_ERROR);
-        printk("Unrecognised token:\n");
-        mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+        printk("Unrecognised token\n");
         return;
     }
 
