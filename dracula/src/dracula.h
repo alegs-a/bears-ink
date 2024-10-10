@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "room.h"
 #include "ai.h"
+#include "rfid.h"
 
 // The stack size of the dracula thread.
 #define DRACULA_THREAD_STACK_SIZE 2048
@@ -36,7 +37,8 @@ enum Action {
     WATER,
     LIGHT,
     GARLIC,
-    END
+    END,
+    ACTION_ERROR
 };
 
 /**
@@ -64,5 +66,6 @@ extern char *room_names[NUM_ROOMS];
 #endif
 
 void dracula_main(void *, void *, void *);
+bool token_valid(struct Token token);
 
 #endif // DRACULA_H
