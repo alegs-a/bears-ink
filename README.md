@@ -159,47 +159,98 @@ Connect the following:
 
 Connect the following for the RFID readers:
 
-| Wire Colour | I2C Function | Port | Configured As | Board Pin |
-| ----------- | ------------ | ---- | ------------- | --------- |
-| Blue        | Serial data  | PB7  | I2C1 SDA      | D4        |
-| Yellow      | Clock        | PB6  | I2C1 SCL      | D5        |
-| Red         | Power        | -    | 3.3V          | 3V3       |
-| Black       | Ground       | -    | 0V            | GND       |
+| TCA9548A Pin | Function       | Port | Configured As | Board Pin |
+| ------------ | -------------- | ---- | ------------- | --------- |
+| VIN          | Power          | -    | 3.3V          | 3V3       |
+| GND          | Ground         | -    | 0V            | GND       |
+| SDA          | I2C data       | PB7  | I2C1 SDA      | D4        |
+| SCL          | Clock          | PB6  | I2C1 SCL      | D5        |
+| RST          | Reset          | -    |               | GND       |
+| A0           | Address select | -    |               | GND       |
+| A1           | Address select | -    |               | GND       |
+| A2           | Address select | -    |               | GND       |
 
-And the buzzer:
+For every bank of 4 RFID readers, connect it to one of the ports on the TCA9548A
+as follows:
 
-| Function | Port | Board Pin |
-| -------- | ---- | --------- |
-| Buzzer   | PA8  | D9        |
-| Ground   | -    | GND       |
+| RFID Pin | Function | TCA9548A Pin                |
+| -------- | -------- | --------------------------- |
+| GND      | Ground   | GND                         |
+| 3.3V     | Power    | VIN                         |
+| SDA      | I2C data | SDX (For some bus number X) |
+| SCL      | Clock    | SCX (For some bus number X) |
+
+> [!note]
+> Make sure readers connected to the same port have different I<sup>2</sup>C
+> addresses from each other; i.e. set the dip switches in different positions.
+> Since the PiicoDev modules support only 4 addresses, 4 is the maximum number
+> of readers per port.
+
+Additionally, connect the buzzer to the board like this:
+
+| Buzzer pin | Function | Port | Board Pin |
+| ---------- | -------- | ---- | --------- |
+| Positive   | Buzzer   | PA8  | D9        |
+| Negative   | Ground   | -    | GND       |
 
 In the [`app.overlay`](/dracula/app.overlay) device tree, configure the `rfid`
-nodes in the `&i2c1` bus. For example:
+nodes in the `&rfid_mux` tree. For example:
 
 ```dts
-&i2c1 {
-	status = "okay";
+rfid_mux: mux@70 {
+	reg = <0x70>;
 
-	rfid@2c {
-		compatible = "nxp,mfrc522";
-		reg = <0x2c>;
-		status = "okay";
-		bearsink,room = "NHALL";
+	mux_i2c@0 {
+		reg = <0>;
+
+		rfid@2c {
+			reg = <0x2c>;
+			bearsink,room = "NHALL";
+		};
+
+		rfid@2d {
+			reg = <0x2d>;
+			bearsink,room = "TOMB";
+		};
+
+		rfid@2e {
+			reg = <0x2e>;
+			bearsink,room = "GUARDEDWAY";
+		};
+	};
+
+	mux_i2c@1 {
+		reg = <1>;
+
+		rfid@2c {
+			reg = <0x2c>;
+			bearsink,room = "ALLEY";
+		};
+
+		rfid@2d {
+			reg = <0x2d>;
+			bearsink,room = "BONEPIT";
+		};
 	};
 };
 ```
 
-Make sure all `status`es are `"okay"`, and change the `reg = <0x2c>;` addresses
-to match your readers, if necessary.
-
 > [!note]
-> Make sure readers on the same bus have different I<sup>2</sup>C addresses from
-> each other; i.e. set the dip switches in different positions. Because the
-> PiicoDev modules support only 4 addresses, 4 is the maximum number of readers
-> per bus.
+> Many device tree properties are omitted from the above example for brevity's
+> sake, but are necessary for proper functioning. See the actual `app.overlay`
+> source for details.
 
-Change the `bearsink,room` property to the [`enum RoomName`](/dracula/src/room.h)
-value corresponding to the room each reader represents
+The `mux_i2c@X` nodes represent SDX/SCX pin pairs on the TCA9548A. The `X` in
+the node name and the `reg = <X>;` property must be set to the port number of
+the pins.
+
+These nodes can then each contain up to four `rfid@XX` nodes, representing RFID
+readers. The `XX` in the node name and the `reg = <0xXX>;` property must be set
+to the I<sup>2</sup>C bus address of the reader, as set by the dip switches.
+
+Then, in the `rfid@XX` nodes, set the `bearsink,room` property to the room name
+(as in [`enum RoomName`](/dracula/src/room.h) value corresponding to the room
+each reader represents
 
 ## 6. Project Overview
 

@@ -28,8 +28,8 @@ extern const k_tid_t rfid_thread_id;
 #define DT_DRV_COMPAT nxp_mfrc522
 #define MFRC522_INIT_PRIO 64
 
-// BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
-//     "RFID readers must be initialised after their bus");
+BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
+    "RFID readers must be initialised after their bus");
 
 struct mfrc522_data {
 };
@@ -45,16 +45,16 @@ int mfrc522_init(const struct device *dev)
     MFRC522 mfrc522(&config->i2c);
   
     if (!device_is_ready(config->i2c.bus)) {
-        LOG_ERR("I2C bus %s not ready", config->i2c.bus->name);
+        printk("I2C bus %s not ready\n", config->i2c.bus->name);
         return -ENODEV;
     }
 
     mfrc522.PCD_Init();
     byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
-    LOG_DBG("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
+    printk("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
     // When 0x00 or 0xFF is returned, communication probably failed
     if ((v == 0x00) || (v == 0xFF)) {
-        LOG_ERR("Room %s not ready", config->room_name);
+        printk("Room %s not ready\n", config->room_name);
         return -ENODEV;
     }
 
@@ -156,8 +156,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Make sure it's a Bears Ink token
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
         buzzer_send(READ_ERROR);
-        printk("Unrecognised token:\n");
-        mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+        printk("Unrecognised token\n");
         return;
     }
 
