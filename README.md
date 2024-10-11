@@ -158,9 +158,20 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
-### 5.2 RFID
+### 5.2 Button
 
-Connect the following for the RFID readers:
+The button is expected to be on this pin:
+
+| Port | Configured As | Board Pin |
+| ---- | ------------- | --------- |
+| PB1  | GPIO          | D6        |
+
+Connect this pin to 3.3V through the button, and to GND through a 10kΩ pull-down
+resistor.
+
+### 5.3 RFID
+
+Connect the TCA9548A multiplexer to the board:
 
 | TCA9548A Pin | Function       | Port | Configured As | Board Pin |
 | ------------ | -------------- | ---- | ------------- | --------- |
@@ -176,12 +187,12 @@ Connect the following for the RFID readers:
 For every bank of 4 RFID readers, connect it to one of the ports on the TCA9548A
 as follows:
 
-| RFID Pin | Function | TCA9548A Pin                |
-| -------- | -------- | --------------------------- |
-| GND      | Ground   | GND                         |
-| 3.3V     | Power    | VIN                         |
-| SDA      | I2C data | SDX (For some bus number X) |
-| SCL      | Clock    | SCX (For some bus number X) |
+| RFID Pin | Function | TCA9548A Pin                   |
+| -------- | -------- | ------------------------------ |
+| GND      | Ground   | GND                            |
+| 3.3V     | Power    | VIN                            |
+| SDA      | I2C data | SDX (For some bus number X)    |
+| SCL      | Clock    | SCX (Same bus number as above) |
 
 > [!note]
 > Make sure readers connected to the same port have different I<sup>2</sup>C
