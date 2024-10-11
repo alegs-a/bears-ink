@@ -7,12 +7,16 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/mutex.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/drivers/gpio.h>
 
 static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
      dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
 
 // Defined and initialised be the above macro.
 extern const k_tid_t dracula_thread_id;
+
+static const struct gpio_dt_spec button =
+    GPIO_DT_SPEC_GET(DT_NODELABEL(confirm_button), gpios);
 
 // Intialise rooms and connections
 Room rooms[ROOM_COUNT] = {
@@ -76,6 +80,16 @@ static void full_players_turn(struct GameState *gamestate);
  * @brief Runs the game.
  */
 void dracula_main(void *, void *, void *) {
+    if (!gpio_is_ready_dt(&button)) {
+        printk("pushbutton not ready\n");
+    }
+
+    int error = gpio_pin_configure_dt(&button, GPIO_INPUT);
+
+    if (error) {
+        printk("gpio pin configure fail\n");
+    }
+
     // Initialise the AI
     dracula_setup();
   
@@ -99,6 +113,7 @@ void dracula_main(void *, void *, void *) {
         {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
     gamestate.can_bite_player_positions = (struct RoomBuffer){.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
         {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
+    k_mutex_unlock(&gamestateMutex);
 
     // Main Game Loop
     for (;;) {
@@ -194,19 +209,23 @@ bool token_valid(struct Token token) {
  */
 static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
     //Wait until confirmation button
-    k_mutex_unlock(&gamestateMutex);
+    while (gpio_pin_get_dt(&button)) {
+        // Wait for button to be unpressed, before being pressed again
+        k_msleep(100);
+    }
+    k_msleep(100); // Debounce
     for(;;) {
         k_msleep(100);
-        printk(".\n");
-       // if (button_state()) {
-       //     break;
-       // }
+        if (gpio_pin_get_dt(&button)) {
+            printk("Button!\n");
+            break;
+        }
     }
-    k_mutex_lock(&gamestateMutex, K_FOREVER);
 
     struct Token tokens[MAX_TOKENS];
     int token_count = rfid_get_tokens(tokens);
 
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     bool error = false;
     int action_val = -1;
     int room_val = -1;
@@ -263,6 +282,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
 
+    k_mutex_unlock(&gamestateMutex);
     return (struct Turn){.action=action_val, .room_name=room_val};
 } 
 
@@ -275,6 +295,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
  * @param gamestate The current board gamestate.
  */
 static void player_rest(uint8_t player, struct GameState *gamestate) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     for(;;) {
         // TODO make input from RFID readers instead of scanf
         //char resource[3];
@@ -299,6 +320,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
             display_health(gamestate->player_health, gamestate->dracula_health);
         }
     }
+    k_mutex_unlock(&gamestateMutex);
 }
 
 /**
@@ -315,6 +337,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
  * @returns True if throwing holy water was successful otherwise false.
  */
 static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -341,6 +364,7 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->players[player].num_water--;
+    k_mutex_unlock(&gamestateMutex);
     return true;
 }
 
@@ -357,6 +381,7 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
  * @returns True if creating light was successful otherwise false.
  */
 static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
                 gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -383,6 +408,7 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
     add_with_duplicate(&(gamestate->sunlights_from), gamestate->player_positions.rooms[player]);
     add_with_duplicate(&(gamestate->sunlights_to), &rooms[room]);
     gamestate->players[player].num_light--;
+    k_mutex_unlock(&gamestateMutex);
     return true;
 }
 
@@ -400,6 +426,7 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
  * @returns True if throwing garlic was succesful otherwise false.
  */
 static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -424,6 +451,7 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->garlic--;
+    k_mutex_unlock(&gamestateMutex);
     return true;
 }
 
@@ -440,6 +468,7 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
  * @returns True if the movement was succesful otherwise false.
  */
 static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
         display_clear(0x00);
         err_not_adjacent();
@@ -447,6 +476,7 @@ static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomNa
         return false;
     }
     gamestate->player_positions.rooms[player] = &rooms[room];
+    k_mutex_unlock(&gamestateMutex);
     return true;
 }
 
@@ -461,6 +491,7 @@ static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomNa
  * @param gamestate The current board gamestate.
  */
 static void player_turn(uint8_t player, struct GameState *gamestate) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
      if (!gamestate->players[player].can_bite) {
         gamestate->players[player].can_bite = true;
     }
@@ -469,6 +500,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
         gamestate->players[player].can_bite = false;
         return;
     }
+    k_mutex_unlock(&gamestateMutex);
     display_clear(0x00);
     err_not_your_turn(player);
     display_health(gamestate->player_health, gamestate->dracula_health);
@@ -510,11 +542,16 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
  * @param gamestate The current board gamestate.
  */
 static void full_players_turn(struct GameState *gamestate) {
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     gamestate->garlic = MAX_GARLIC;
     gamestate->can_bite_player_positions.length = 0;
     for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
         gamestate->cur_player = i;
+        k_mutex_unlock(&gamestateMutex);
+
         player_turn(i, gamestate);
+
+        k_mutex_lock(&gamestateMutex, K_FOREVER);
         if (gamestate->players[i].can_bite) {
             add_with_duplicate(&(gamestate->can_bite_player_positions), gamestate->player_positions.rooms[i]);
         }
@@ -522,6 +559,7 @@ static void full_players_turn(struct GameState *gamestate) {
         if (gamestate->dracula_health <= 0) {
             break;
         } 
+    k_mutex_unlock(&gamestateMutex);
     }
 }
 
@@ -538,6 +576,7 @@ static void full_dracula_turn(struct GameState *gamestate) {
     dracula_turn(gamestate, &bites);
     
     // Applies the bites to each player when applicable
+    k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (bites.length != 0) {
         for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
             for (uint8_t j = 0; j < bites.length; j++) {
@@ -564,4 +603,5 @@ static void full_dracula_turn(struct GameState *gamestate) {
     gamestate->can_bite = true; 
     gamestate->sunlights_from.length = 0;
     gamestate->sunlights_to.length = 0;
+    k_mutex_unlock(&gamestateMutex);
 }
