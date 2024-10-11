@@ -21,7 +21,8 @@ Contents:
 6. [Project Overview](#6-project-overview)
 7. [Repository Structure](#7-repository-structure)
 8. [Using the Display](#8-using-the-display)
-9. [Additional Resources](#9-additional-resources)
+9. [Privacy and Ethical considerations](#9-privacy-and-ethical-considerations)
+10. [Additional Resources](#10-additional-resources)
 
 The majority of our original work can be found in the `dracula/src` directory
 (see [Repository Structure](#7-repository-structure)).
@@ -329,6 +330,9 @@ flowchart LR
 
 ## 7. Repository Structure
 
+The majority of our original work is contained in the `assets/`, `dracula/`, and
+`prototypes/` directories.
+
 - [`.devcontainer`](/.devcontainer)
   - [`devcontainer.json`](/.devcontainer/devcontainer.json) - Development container configuration file.
   - [`dockerfile`](/.devcontainer/dockerfile) - Dockerfile defining the zephyr development environment.
@@ -351,9 +355,9 @@ flowchart LR
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
     - [`dracula.c`](/dracula/src/dracula.c) / [`dracula.h`](/dracula/src/dracula.h) - Core game logic implementation.
     - [`font.c`](/dracula/src/font.c) / [`font.h`](/dracula/src/font.h) - Interface for displaying strings on the display.
-    - [`MRFC522_I2C.cpp`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html)
+    - [`MRFC522_I2C.cpp`](/dracula/src/MRFC522_I2C.c) / [`MRFC522_I2C.h`](/dracula/src/MRFC522_I2C.h) - Library for interfacing with the [RFID modules](https://core-electronics.com.au/piicodev-rfid-module.html). From [arozcan/MFRC522-I2C-Library](https://github.com/arozcan/MFRC522-I2C-Library), but with slight modifications to run on Zephyr.
     - [`rfid.cpp`](/dracula/src/rfid.cpp) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
-    - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
+    - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) - Functions and data structures for manipulating arrays of rooms
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Prototypes of AI and game logic, *not* compiled for or sent to the board.
     - [`debug`](/prototypes/debug) - A version of the C game logic that uses the ai and room code that is loaded onto the device, but does IO in the terminal. Useful for debugging the ai.
@@ -397,7 +401,32 @@ requires:
 > use up valuable RAM. Instead, each buffer should be defined in it's own
 > function, and therefore retrieved from program memory when required.
 
-## 9. Additional Resources
+## 9. Privacy and Ethical considerations
+
+TODO:
+- Accessibility
+  - Language use in display
+  - Buzzer
+  - LED colours
+
+On the side of data security and privacy, the only user data collected by the
+game board is the specific moves everyone makes in the context of a game. This
+data is not personally-identifying information, and is stored exclusively in
+volatile memory, so is erased when the power switch is flipped off.
+
+The RFID tokens, being the only loose parts, are susceptible to being lost by
+players, which would make the game unplayable were they to lose e.g. a player
+token. This is why the tokens use the standard NDEF format to store data.
+Players can reprogram tokens, or create new tokens, using any NFC tag reader/
+writer (for example, a smartphone app). See the code that reads tokens in
+[`rfid.cpp`](/dracula/src/rfid.cpp#L142-L214).
+
+Since the tokens encode URLs, they can also be scanned by players' phones to
+take them to this repository. This is facilitated by a static redirect server,
+and players' IP addresses and User Agent strings are shared with this redirect
+server and with GitHub (after the redirect).
+
+## 10. Additional Resources
 
 - Prototypes for the game logic and the AI may be found in
   [`prototypes`](/prototypes/)
