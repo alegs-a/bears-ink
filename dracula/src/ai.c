@@ -3,9 +3,16 @@
 #include "dracula.h"
 #include <stdlib.h>
 #include <stdbool.h>
-#include <stdio.h>
 
-#define ASSERT(b, err_str) if (!(b)) fprintf(stderr, "Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
+#ifndef DEBUG
+    #include <zephyr/sys/printk.h>
+    #define ASSERT(b, err_str) if (!(b)) printk("Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
+#else
+    #include <stdio.h>
+    #define ASSERT(b, err_str) if (!(b)) fprintf(stderr, "Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
+#endif
+
+
 
 
 // number of rounds since the last time Dracula bit a player
@@ -18,6 +25,30 @@ static struct RoomBuffer dracula_state;
 
 
 #ifdef DEBUG
+char *room_names[] = {
+    "NHALL",
+    "TOMB",
+    "GUARDEDWAY",
+    "GALLERY",
+    "ALLEY",
+    "BONEPIT",
+    "ENTRANCE",
+    "VENT",
+    "DUNGEON",
+    "DINING",
+    "LIBRARY",
+    "CRYPT",
+    "PASSAGE",
+    "CHAPEL",
+    "NEST",
+    "BATHROOM",
+    "CANAL",
+    "STAIRCASE",
+    "CELLAR",
+    "SHALL",
+    "BALLROOM",
+};
+
 void print_room_buffer(const struct RoomBuffer buf) {
     for (int i = 0; i < buf.length; i++) {
         printf("%s\n", room_names[buf.rooms[i]->room]);
