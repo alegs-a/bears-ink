@@ -23,9 +23,12 @@ Contents:
 8. [Using the Display](#8-using-the-display)
 9. [Additional Resources](#9-additional-resources)
 
+The majority of our original work can be found in the `dracula/src` directory
+(see [Repository Structure](#7-repository-structure)).
+
 ## 2. Development Environment
 
-Only windows and linux are supported (not apple).
+Only windows and linux are supported (not apple architecture).
 
 Firstly, download the required programs for the development environment:
 - [VSCode](https://code.visualstudio.com/download) - Our selected integrated
@@ -331,7 +334,7 @@ flowchart LR
   - [`prj.conf`](/dracula/prj.conf) - [KConfig](https://docs.zephyrproject.org/latest/build/kconfig/index.html) file that defines the enabled peripherals and microcontroller options. All available options can be found [here](https://docs.zephyrproject.org/2.7.5/reference/kconfig/index-all.html).
   - [`CMakeLists.txt`](/dracula/CMakeLists.txt) - CMake file defining the source files (globbed from [`src`](/dracula/src)) and zephyr as a project dependancy.
   - [`app.overlay`](/dracula/app.overlay) - A [DeviceTree](https://docs.zephyrproject.org/latest/build/dts/intro-scope-purpose.html) overlay file that defines and configures the microcontroller hardware including SPI, I2C, GPIO and PWM, to communicate with display, rfid and led strip.
-  - [`src`](/dracula/src) - Source code for the project.
+  - [`src`](/dracula/src) - Source code for the project. *This directory contains the large majority of our original work.*
     - [`ai.c`](/dracula/src/ai.c) / [`ai.h`](/dracula/src/ai.h) - Implementation of the dracula AI.
     - [`buzzer.c`](/dracula/src/buzzer.c) / [`buzzer.h`](/dracula/src/buzzer.h) - Dedicated thread controlling the buzzer. (Commands are given to it by the RFID thread)
     - [`display.c`](/dracula/src/display.c) / [`display.h`](/dracula/src/display.h) - Driver for the [OLED display module](https://core-electronics.com.au/242inch-oled-display-module-128x64px.html) that uses the [`SSD1309`](https://www.hpinfotech.ro/SSD1309.pdf) IC interface.
@@ -341,7 +344,9 @@ flowchart LR
     - [`rfid.cpp`](/dracula/src/rfid.cpp) / [`rfid.h`](/dracula/src/rfid.h) - Driver coordinating the multiple RFID modules and keeping track of token locations
     - [`room.c`](/dracula/src/room.c) / [`room.h`](/dracula/src/room.h) -
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
-- [`prototypes`](/prototypes) - Game logic designs in other languages.
+- [`prototypes`](/prototypes) - Prototypes of AI and game logic, *not* compiled for or sent to the board.
+    - [`debug`](/prototypes/debug) - A version of the C game logic that uses the ai and room code that is loaded onto the device, but does IO in the terminal. Useful for debugging the ai.
+    - [`quantum_dracula`](/prototypes/quantum_dracula) - The Haskell prototype of the Quantum Dracula ai.
 - [`scripts`](/scripts)
   - [`build.sh`](/scripts/build.sh) - Builds the source file.
   - [`clean.sh`](/scripts/clean.sh) - Deletes the build folder of the last compilation.
