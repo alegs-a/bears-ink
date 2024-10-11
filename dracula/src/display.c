@@ -241,6 +241,8 @@ int display_init()
 
     display_clear(0x00);
 
+    display_invert(true);
+
     return error;
 }
 
@@ -354,9 +356,9 @@ void display_main(void*, void*, void*)
 
         int error = display_write(
             message->x,
-            message->x + message->image->width,
+            message->x + message->image->width - 1,
             message->y,
-            message->y + message->image->height,
+            message->y + message->image->height - 1,
             message->image->buffer,
             message->image->size
         );

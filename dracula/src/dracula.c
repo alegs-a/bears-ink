@@ -2,6 +2,7 @@
 #include "ai.h"
 #include "room.h"
 #include "rfid.h"
+#include "ui.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/mutex.h>
@@ -137,8 +138,11 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
     return false;
 }
 
-/*
-*/
+/**
+ * @brief
+ * @param
+ * @returns
+ */
 bool token_valid(struct Token token) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
     uint8_t player = gamestate.cur_player;
@@ -153,7 +157,8 @@ bool token_valid(struct Token token) {
             valid = false;
         }
     } else if (token.kind == Sunlight) {
-         if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)) {
+         if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)  &&
+                gamestate.player_positions.rooms[player]->room != room) {
             valid = false;
         } else if (gamestate.players[player].num_light <= 0) {
             valid = false;
@@ -169,7 +174,8 @@ bool token_valid(struct Token token) {
                (token.kind == Player2 && player == 1) ||
                (token.kind == Player3 && player == 2) ||
                (token.kind == Player4 && player == 3) ) {
-        if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)) {
+        if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                gamestate.player_positions.rooms[player]->room != room) {
             valid = false;
         }
     } else {
@@ -246,9 +252,14 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         action_val = END;
     }
     if (error) {
-        // TODO: To many tokens error
-         // printf("Too many actions\n");
+        display_clear(0x00);
+        err_too_many_actions();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         action_val = ACTION_ERROR;
+    } else {
+        display_clear(0x00);
+        mes_valid_action();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
 
     return (struct Turn){.action=action_val, .room_name=room_val};
@@ -282,7 +293,9 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
             }
             break;
         } else {
-            // printf("Invalid Resource\n");
+            display_clear(0x00);
+            err_invalid_resource();
+            display_health(gamestate->player_health, gamestate->dracula_health);
         }
     }
 }
@@ -303,20 +316,28 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
 static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
-        // printf("The room is not adjacent\n");
+        display_clear(0x00);
+        err_not_adjacent();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
     if (gamestate->players[player].num_water <= 0) {
-        // printf("No more water\n");
+        display_clear(0x00);
+        err_no_water();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
         gamestate->dracula_health--;
         gamestate->can_bite = false;
-        // printf("Dracula is in that room with now %d health.\n", gamestate->dracula_health);
+        display_clear(0x00);
+        mes_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        // printf("Dracula is not in that room.\n");
+        display_clear(0x00);
+        mes_no_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->players[player].num_water--;
     return true;
@@ -335,19 +356,28 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
  * @returns True if creating light was successful otherwise false.
  */
 static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomName room) {
-    if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
-        // printf("The room is not adjacent\n");
+    if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
+                gamestate->player_positions.rooms[player]->room != room) {
+        display_clear(0x00);
+        err_not_adjacent();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
-    if (gamestate->players[player].num_light <= 0) {
-        // printf("No more light\n");
+    if (gamestate->players[player].num_light <= 0 ) {
+        display_clear(0x00);
+        err_no_light();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
-        // printf("Dracula is in that room with %d health.\n", gamestate->dracula_health);
+        display_clear(0x00);
+        mes_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        // printf("Dracula is not in that room.\n");
+        display_clear(0x00);
+        mes_no_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     add_with_duplicate(&(gamestate->sunlights_from), gamestate->player_positions.rooms[player]);
     add_with_duplicate(&(gamestate->sunlights_to), &rooms[room]);
@@ -371,18 +401,26 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
 static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
-        // printf("The room is not adjacent\n");
+        display_clear(0x00);
+        err_not_adjacent();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
     if (gamestate->garlic <= 0) {
-        // printf("No more garlic\n");
+        display_clear(0x00);
+        err_no_garlic();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
-        // printf("Dracula is in that room with %s health.\n", gamestate->dracula_health);
+        display_clear(0x00);
+        mes_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        // printf("Dracula is not in that room.\n");
+        display_clear(0x00);
+        mes_no_dracula();
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->garlic--;
     return true;
@@ -402,7 +440,9 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
  */
 static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
-        // printf("The room is not adjacent\n");
+        display_clear(0x00);
+        err_not_adjacent();
+        display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
     gamestate->player_positions.rooms[player] = &rooms[room];
@@ -428,7 +468,9 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
         gamestate->players[player].can_bite = false;
         return;
     }
-    // printf("Player %d's turn.\n", player);
+    display_clear(0x00);
+    err_not_your_turn(player);
+    display_health(gamestate->player_health, gamestate->dracula_health);
 
     bool player_moved = false;
     bool garlic_thrown = false;
@@ -508,7 +550,11 @@ static void full_dracula_turn(struct GameState *gamestate) {
                     if (gamestate->players[i].num_water > 0) {
                         gamestate->players[i].num_water--;   
                     }
-                    // printf("Player %d has been bitten and loses one water. Player's now have %d health.\n", i,  gamestate.player_health);
+
+                    display_clear(0x00);
+                    mes_player_bitten(i);
+                    display_health(gamestate->player_health, gamestate->dracula_health);
+                    k_msleep(3000);
                     break;
                 }               
             }

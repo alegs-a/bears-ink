@@ -23,6 +23,7 @@
 // The thread priority of the dracula logic.
 #define DISPLAY_THREAD_PRIORITY 5
 
+
 /**
  * @brief Initialises the display driver.
  * @returns Zero if the display driver initialised successfully.

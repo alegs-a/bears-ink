@@ -2,9 +2,9 @@
 
 unsigned char buffer_A[5] = {
     0b11111100,
-    0b00010011,
+    0b00010010,
     0b00010001,
-    0b00010011,
+    0b00010010,
     0b11111100
 };
 
@@ -17,7 +17,7 @@ unsigned char buffer_B[5] = {
 };
 
 unsigned char buffer_C[5] = {
-    0b11111111,
+    0b01111110,
     0b10000001,
     0b10000001,
     0b10000001,
@@ -57,11 +57,11 @@ unsigned char buffer_G[5] = {
 };
 
 unsigned char buffer_H[5] = {
-    0b11111111,
+    0b01111110,
     0b00001000,
     0b00001000,
     0b00001000,
-    0b11111111,
+    0b01111111,
 };
 
 unsigned char buffer_I[5] = {
@@ -93,7 +93,7 @@ unsigned char buffer_L[5] = {
     0b10000000,
     0b10000000,
     0b10000000,
-    0b11000000
+    0b10000000
 };
 
 unsigned char buffer_M[5] = {
@@ -113,11 +113,11 @@ unsigned char buffer_N[5] = {
 };
 
 unsigned char buffer_O[5] = {
-    0b11111111,
+    0b01111110,
     0b10000001,
     0b10000001,
     0b10000001,
-    0b11111111
+    0b01111110
 };
 
 unsigned char buffer_P[5] = {
@@ -296,6 +296,14 @@ unsigned char buffer_question_mark[5] = {
     0b00000110
 };
 
+unsigned char buffer_space[5] = {
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b00000000
+};
+
 unsigned char *display_get_buffer(char c)
 {
     // Convert lowercase letters to uppercase.
@@ -304,6 +312,7 @@ unsigned char *display_get_buffer(char c)
 
     switch (c)
     {
+        case ' ': return buffer_space; break;
         case 'A': return buffer_A; break;
         case 'B': return buffer_B; break;
         case 'C': return buffer_C; break;
