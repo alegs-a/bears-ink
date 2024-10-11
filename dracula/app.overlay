@@ -19,6 +19,9 @@
 	rfid_buzzer: buzzer {
 		gpios = <&gpioa 8 GPIO_ACTIVE_HIGH>;
 	};
+	confirm_button: button {
+		gpios = <&gpiob 1 GPIO_ACTIVE_HIGH>;
+	};
 };
 
 &i2c1 {
