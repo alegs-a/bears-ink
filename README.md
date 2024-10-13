@@ -12,6 +12,8 @@ automate Dracula's actions and display game information to the players using an
 LCD screen and LEDs, that provides an engaging user experience. Will the players
 be able to take down Dracula in time?
 
+The full rules are [here](docs/rules.md).
+
 Contents:
 1. [Dracula](#Dracula)
 2. [Development Environment](#2-development-environment)
