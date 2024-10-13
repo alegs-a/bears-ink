@@ -62,8 +62,8 @@ enum ComPinConfig {
 void display_main(void*, void*, void*);
 
 // Thread instance running the main lissajous thread.
-static K_THREAD_DEFINE(display, DISPLAY_THREAD_STACK_SIZE,
-    display_main, NULL, NULL, NULL, DISPLAY_THREAD_PRIORITY, 0, 0);
+// static K_THREAD_DEFINE(display, DISPLAY_THREAD_STACK_SIZE,
+//     display_main, NULL, NULL, NULL, DISPLAY_THREAD_PRIORITY, 0, 0);
 
 // Defined and initialised be the above macro.
 extern const k_tid_t display_thread_id;
@@ -343,14 +343,26 @@ int display_image(struct Image *image, unsigned int x, unsigned int y)
     message->x = x;
     message->y = y;
 
-    k_fifo_alloc_put(&display_queue, message);
+    int error = display_write(
+        message->x,
+        message->x + message->image->width - 1,
+        message->y,
+        message->y + message->image->height - 1,
+        message->image->buffer,
+        message->image->size
+    );
+
+    if (error) {
+        printk("failed to display image\n");
+    }
+
+    k_free(message);
     return 0;
 }
 
 void display_main(void*, void*, void*)
 {
     for (;;) {
-
         // Get the next image display request, waiting forever.
         struct ImageMessage *message = k_fifo_get(&display_queue, K_FOREVER);
 

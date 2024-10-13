@@ -21,7 +21,7 @@
 #define DISPLAY_THREAD_STACK_SIZE 2048
 
 // The thread priority of the dracula logic.
-#define DISPLAY_THREAD_PRIORITY 5
+#define DISPLAY_THREAD_PRIORITY 4
 
 
 /**
@@ -98,8 +98,6 @@ struct Image {
 
 /**
  * @brief Display an image.
- * 
- * @note This function is asynchronous.
  * 
  * @param image The image to display.
  * @param x The x coordinate of the image.
