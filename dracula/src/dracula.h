@@ -8,12 +8,6 @@
 #include "ai.h"
 #include "rfid.h"
 
-// The stack size of the dracula thread.
-#define DRACULA_THREAD_STACK_SIZE 2048
-
-// The thread priority of the dracula logic.
-#define DRACULA_THREAD_PRIORITY 5
-
 #define INIT_WATER 2 // The starting number of water for each player
 #define MAX_WATER 3 // The maximum number of water
 
@@ -65,7 +59,7 @@ extern Room rooms[NUM_ROOMS];
 extern char *room_names[NUM_ROOMS];
 #endif
 
-void dracula_main(void *, void *, void *);
+void dracula_main();
 bool token_valid(struct Token token);
 
 #endif // DRACULA_H

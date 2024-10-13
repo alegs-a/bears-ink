@@ -9,12 +9,6 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
 
-static K_THREAD_DEFINE(dracula, DRACULA_THREAD_STACK_SIZE,
-     dracula_main, NULL, NULL, NULL, DRACULA_THREAD_PRIORITY, 0, 0);
-
-// Defined and initialised be the above macro.
-extern const k_tid_t dracula_thread_id;
-
 static const struct gpio_dt_spec button =
     GPIO_DT_SPEC_GET(DT_NODELABEL(confirm_button), gpios);
 
@@ -79,7 +73,7 @@ static void full_players_turn(struct GameState *gamestate);
 /**
  * @brief Runs the game.
  */
-void dracula_main(void *, void *, void *) {
+void dracula_main() {
     if (!gpio_is_ready_dt(&button)) {
         printk("pushbutton not ready\n");
     }
@@ -214,10 +208,11 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         k_msleep(100);
     }
     k_msleep(100); // Debounce
+    printk("Waiting for turn confirmation...");
     for(;;) {
         k_msleep(100);
         if (gpio_pin_get_dt(&button)) {
-            printk("Button!\n");
+            printk(" Button!\n");
             break;
         }
     }

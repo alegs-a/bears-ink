@@ -23,10 +23,9 @@ int main()
     ui_splash();
     // display_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 0, 0);
 
-    // Yield to worker threads.
-    for (;;) {
-        k_msleep(1000);
-    }
+    printk("Initialisation done.\n");
+
+    dracula_main();
 
     return 0;
 }
