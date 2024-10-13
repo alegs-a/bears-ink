@@ -13,6 +13,7 @@ There are three types of item.
 | Garlic               | Four per round (any players) | Can detect Dracula, but doesn't cause damage or any other effect.                                                                                                                                                                                                                      |
 | Sunshine in a bottle | Yes                          | Illuminates a room with bright sunlight until the end of Dracula's turn. If a room becomes illuminated Dracula must immediately leave the room , and cannot enter again until after his turn. He must leave through a doorway other than the one that the sunshine was thrown through. |
 | Holy water           | Yes                          | If holy water is thrown into a room and Dracula is in that room he will take 1 point of damage.                                                                                                                                                                                        |
+
 Players each start the game with three Sunshines and three Holy Waters, but can only play one per turn.
 
 # Game Setup
