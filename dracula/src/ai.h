@@ -35,6 +35,7 @@ struct GameState {
     struct Player *players;
     int8_t player_health;
     uint8_t garlic;
+    bool player_resting;
     uint8_t cur_player;
     int8_t dracula_health;
     // Rooms that all of the players are in. If two players are in the same

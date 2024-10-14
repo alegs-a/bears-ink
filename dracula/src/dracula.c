@@ -91,7 +91,7 @@ void dracula_main() {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
     gamestate = (struct GameState){.player_health=PLAYER_HEALTH, 
         .garlic=MAX_GARLIC, .dracula_health=DRACULA_HEALTH, 
-        .can_bite=true, .cur_player=0,
+        .can_bite=true, .cur_player=0, .player_resting = false,
         .sunlights_from={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]},
         .sunlights_to={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]}};
 
@@ -148,9 +148,11 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
 }
 
 /**
- * @brief
- * @param
- * @returns
+ * @brief Check if a given token provides a valid action.
+ * 
+ * @param token The token that will be checked.
+ * 
+ * @returns True if the action is valid, false otherwise.
  */
 bool token_valid(struct Token token) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
@@ -158,37 +160,43 @@ bool token_valid(struct Token token) {
     enum RoomName room = token.room;
     bool valid = true;
 
-    if (token.kind == Garlic) {
-        if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
-            gamestate.player_positions.rooms[player]->room != room) {
+    if (!gamestate.player_resting) {
+        if (token.room == NUM_ROOMS) {
             valid = false;
-        } else if (gamestate.garlic <= 0) {
-            valid = false;
-        }
-    } else if (token.kind == Sunlight) {
-         if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)  &&
+        } else if (token.kind == Garlic) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
                 gamestate.player_positions.rooms[player]->room != room) {
-            valid = false;
-        } else if (gamestate.players[player].num_light <= 0) {
-            valid = false;
-        }
-    } else if (token.kind == HolyWater) {
-        if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
-                gamestate.player_positions.rooms[player]->room != room) {
-            valid = false;
-        } else if (gamestate.players[player].num_water <= 0) {
-            valid = false;
-        }
-    } else if ((token.kind == Player1 && player == 0) ||
-               (token.kind == Player2 && player == 1) ||
-               (token.kind == Player3 && player == 2) ||
-               (token.kind == Player4 && player == 3) ) {
-        if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
-                gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.garlic <= 0) {
+                valid = false;
+            }
+        } else if (token.kind == Sunlight) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)  &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.players[player].num_light <= 0) {
+                valid = false;
+            }
+        } else if (token.kind == HolyWater) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.players[player].num_water <= 0) {
+                valid = false;
+            }
+        } else if ((token.kind == Player1 && player == 0) ||
+                (token.kind == Player2 && player == 1) ||
+                (token.kind == Player3 && player == 2) ||
+                (token.kind == Player4 && player == 3) ) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            }
+        } else {
             valid = false;
         }
     } else {
-        valid = false;
+        valid = (token.room == NUM_ROOMS && (token.kind == HolyWater || token.kind == Sunlight));
     }
 
     k_mutex_unlock(&gamestateMutex);
@@ -238,7 +246,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
                 room_val = tokens[i].room;
             }
         }
-        if (tokens[i].kind == Sunlight) {
+        else if (tokens[i].kind == Sunlight) {
             if (action_val != -1) {
                 error = true;
                 break;
@@ -246,7 +254,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             action_val = LIGHT;
             room_val = tokens[i].room;
         }
-        if (tokens[i].kind == HolyWater) {
+        else if (tokens[i].kind == HolyWater) {
             if (action_val != -1) {
                 error = true;
                 break;
@@ -254,7 +262,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             action_val = WATER;
             room_val = tokens[i].room;
         }
-        if (tokens[i].kind == Garlic) {
+        else if (tokens[i].kind == Garlic) {
             if (action_val != -1) {
                 error = true;
                 break;
@@ -291,31 +299,61 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
  */
 static void player_rest(uint8_t player, struct GameState *gamestate) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+    gamestate->player_resting = true;
+    k_mutex_unlock(&gamestateMutex);
+
     for(;;) {
-        // TODO make input from RFID readers instead of scanf
-        //char resource[3];
-        // printf("Choose Resource:\n");
-        //scanf("%s", &resource);
-        //int resource_val = atoi(resource);
-        uint8_t resource_val = 1;
+        //Wait until confirmation button
+        while (gpio_pin_get_dt(&button)) {
+            // Wait for button to be unpressed, before being pressed again
+            k_msleep(100);
+        }
+        k_msleep(100); // Debounce
+        printk("Waiting for rest confirmation...");
+        for(;;) {
+            k_msleep(100);
+            if (gpio_pin_get_dt(&button)) {
+                printk(" Button!\n");
+                break;
+            }
+        }
+
+        k_mutex_lock(&gamestateMutex, K_FOREVER);
+        struct Token tokens[MAX_TOKENS];
+        int token_count = rfid_get_tokens(tokens);
+
+        enum Action resource_val = ACTION_ERROR;
+        for (int i = 0; i < token_count; i++) {
+            if (tokens[i].room == NUM_ROOMS) {
+                if (tokens[i].kind == HolyWater) {
+                    resource_val = WATER;
+                } else if (tokens[i].kind == Sunlight) {
+                    resource_val = LIGHT;
+                }
+            }
+        }
 
         if (resource_val == WATER) {
             if (gamestate->players[player].num_water < MAX_WATER) {
                 gamestate->players[player].num_water++;
             }
+            gamestate->player_resting = true;
+            k_mutex_unlock(&gamestateMutex);
             break;
         } else if (resource_val == LIGHT) {
             if (gamestate->players[player].num_light < MAX_LIGHT) {
                 gamestate->players[player].num_light++;
             }
+            gamestate->player_resting = true;
+            k_mutex_unlock(&gamestateMutex);
             break;
         } else {
             display_clear(0x00);
             err_invalid_resource();
             display_health(gamestate->player_health, gamestate->dracula_health);
         }
+        k_mutex_unlock(&gamestateMutex);
     }
-    k_mutex_unlock(&gamestateMutex);
 }
 
 /**
@@ -554,7 +592,7 @@ static void full_players_turn(struct GameState *gamestate) {
         if (gamestate->dracula_health <= 0) {
             break;
         } 
-    k_mutex_unlock(&gamestateMutex);
+        k_mutex_unlock(&gamestateMutex);
     }
 }
 
