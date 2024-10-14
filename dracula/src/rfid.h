@@ -6,7 +6,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include "buzzer.h"
+#include <zephyr/kernel.h>
 #include "room.h"
 
 // The stack size of the rfid thread.
@@ -14,6 +14,9 @@ extern "C" {
 
 // The thread priority of the thread logic.
 #define RFID_THREAD_PRIORITY 5
+
+// Defined in main.c
+extern k_tid_t rfid_thread_id;
 
 // The maximum number of tokens that should be tracked by the driver
 #define MAX_TOKENS 64
@@ -49,6 +52,8 @@ struct Token {
  * @return The number of tokens written
  */
 int rfid_get_tokens(struct Token *tokens);
+
+void rfid_onestep();
 
 /**
  * @brief The rfid thread handling I/O from rfid readers.

@@ -1,9 +1,8 @@
 #include "rfid.h"
-#include "buzzer.h"
-#include "room.h"
 #include "MFRC522_I2C.h"
 
 extern "C" {
+#include "buzzer.h"
 #include "dracula.h"
 }
 
@@ -21,13 +20,6 @@ extern "C" {
 LOG_MODULE_REGISTER(mfrc522, CONFIG_I2C_LOG_LEVEL);
 
 void rfid_main(void *, void *, void *);
-
-// Thread running the rfid driver.
-static K_THREAD_DEFINE(rfid, RFID_THREAD_STACK_SIZE,
-    rfid_main, NULL, NULL, NULL, RFID_THREAD_PRIORITY, 0, 0);
-
-// Defined and initialised by the above macro.
-extern const k_tid_t rfid_thread_id;
 
 #define DT_DRV_COMPAT nxp_mfrc522
 #define MFRC522_INIT_PRIO 64
@@ -54,6 +46,7 @@ int mfrc522_init(const struct device *dev)
     }
 
     mfrc522.PCD_Init();
+    mfrc522.PCD_AntennaOn();
     byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
     printk("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
     // When 0x00 or 0xFF is returned, communication probably failed
@@ -129,13 +122,16 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 {
     mfrc522.i2c = &room->i2c;
 
+    // mfrc522.PCD_AntennaOn();
     if (!mfrc522.PICC_IsNewCardPresent()) {
+        // mfrc522.PCD_AntennaOff();
         return;
     }
 
     // Read the new card's UID into mfrc522.uid
     if (!mfrc522.PICC_ReadCardSerial()) {
         buzzer_send(READ_ERROR);
+        // mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -161,6 +157,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
         buzzer_send(READ_ERROR);
         printk("Unrecognised token\n");
+        // mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -178,6 +175,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token: %s\n", game);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+        // mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -210,6 +208,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+        // mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -239,6 +238,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // Halt the token. We can wake it up later when we want to check its presence.
     mfrc522.PICC_HaltA();
+    // mfrc522.PCD_AntennaOff();
 }
 
 /**
@@ -258,6 +258,7 @@ void detect_current_cards(MFRC522 mfrc522)
         const struct mfrc522_cfg *room =
             (const struct mfrc522_cfg *)get_room(currentTokens[i].room)->config;
         mfrc522.i2c = &room->i2c;
+        // mfrc522.PCD_AntennaOn();
 
         mfrc522.uid.size = 7;
         mfrc522.uid.sak = 0;
@@ -277,6 +278,7 @@ void detect_current_cards(MFRC522 mfrc522)
         }
 
         mfrc522.PICC_HaltA();
+        // mfrc522.PCD_AntennaOff();
     }
     k_mutex_unlock(&tokensMutex);
 }
@@ -302,6 +304,14 @@ int rfid_get_tokens(struct Token *tokens)
     k_mutex_unlock(&tokensMutex);
 
     return tokenCount;
+}
+
+void rfid_onestep()
+{
+    MFRC522 mfrc522;
+    DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
+    detect_current_cards(mfrc522);
+    
 }
 
 void rfid_main(void *, void *, void *)

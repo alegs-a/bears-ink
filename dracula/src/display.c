@@ -1,5 +1,7 @@
 #include "display.h"
+#include "rfid.h"
 
+#include <zephyr/irq.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/spi.h>
@@ -225,7 +227,7 @@ int display_init()
         COMMAND_SET_SCAN_DESCENDING,
         COMMAND_DEFAULT_START_LINE,
         COMMAND_ADDRESS_MODE, ADDRESS_MODE_HORISONTAL,
-        COMMAND_SET_CONTRAST, 255,
+        COMMAND_SET_CONTRAST, 127,
         COMMAND_DISPLAY_ON,
         COMMAND_SET_INVERSION_NORMAL,
         COMMAND_DEACTIVATE_SCROLL,

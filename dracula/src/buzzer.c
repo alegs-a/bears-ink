@@ -47,10 +47,16 @@ void buzzer_main(void *, void *, void *)
         struct buzzer_queue_item *item = k_fifo_get(&buzzer_queue, K_FOREVER);
 
         switch (item->kind) {
-        case READ_OK:
+        case STARTUP:
             // BEEEEP
             gpio_pin_set_dt(&buzzer_pin, 1);
             k_msleep(500);
+            gpio_pin_set_dt(&buzzer_pin, 0);
+            break;
+        case READ_OK:
+            // BEEP
+            gpio_pin_set_dt(&buzzer_pin, 1);
+            k_msleep(300);
             gpio_pin_set_dt(&buzzer_pin, 0);
             break;
         case READ_ERROR:
