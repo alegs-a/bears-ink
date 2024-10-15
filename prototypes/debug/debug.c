@@ -202,6 +202,7 @@ static enum TokenKind parse_token_kind(const char *str) {
     for (int i = 0; i < NumTokenKinds; i++) {
         if (strcmp(str, token_type_names[i]) == 0) return i;
     }
+    printf("Error: Bad token kind (%s)\n", str);
     return NumTokenKinds; // Error value
 }
 
@@ -209,6 +210,7 @@ static enum RoomName parse_room_name(const char *str) {
     for (int i = 0; i < NUM_ROOMS + 1; i++) {
         if (strcmp(str, room_names[i]) == 0) return i;
     }
+    printf("Error: Bad room name (%s)\n", str);
     return NUM_ROOMS + 1; // Error value
 }
 
@@ -232,10 +234,7 @@ static int get_token(struct Token *buffer) {
         }
         enum TokenKind kind = parse_token_kind(token_type);
         enum RoomName name = parse_room_name(room_name);
-        if (kind == NumTokenKinds || name > NUM_ROOMS) { // GT for name bc we might want to collect a resource
-            printf("Bad token format\n");
-            continue;
-        }
+        if (kind == NumTokenKinds || name > NUM_ROOMS) continue; // parse error(s) already printed
         *buffer = (struct Token){ .kind = kind, .room = name };
         return 1;
     }
@@ -294,6 +293,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         }
     }
     if (action_val == -1) {
+        printf("Ending turn\n");
         action_val = END;
     }
     if (error) {
@@ -505,27 +505,18 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
     bool garlic_thrown = false;
     for (;;) {
         struct Turn turn = player_input(player, gamestate);
-        if (turn.action == ACTION_ERROR) { 
-            continue;
-        } else if (turn.action == END) {
+        if (turn.action == ACTION_ERROR) continue;
+        if (turn.action == END) {
             // Rest occurs when no action has been done
             if (!player_moved && !garlic_thrown) { 
                 player_rest(player, gamestate);
             }
-            break;
+            return;
         }
-        else if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) {
-            break;
-        }
-        else if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) {
-            break;
-        }
-        else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
-            garlic_thrown = true;
-        }
-        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) {
-            player_moved = true;
-        }
+        if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) return;
+        if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) return;
+        if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) garlic_thrown = true;
+        if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) player_moved = true;
     }
 }
 

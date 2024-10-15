@@ -13,8 +13,6 @@
 #endif
 
 
-
-
 // number of rounds since the last time Dracula bit a player
 static int last_bite;
 // number of rounds since the last players received POSITIVE information on Dracula's position
@@ -92,8 +90,10 @@ static void walk_ends(
         int len = starting->length;
         for (int i = 0; i < len; i++) {
             for (int j = 0; j < starting->rooms[i]->adjacent->length; j++) {
-                add_no_duplicate(starting,
-                        starting->rooms[i]->adjacent->rooms[j]);
+                Room *candidate = starting->rooms[i]->adjacent->rooms[j];
+                if (contains_room(innaccessible, candidate) < 0) {
+                    add_no_duplicate(starting, candidate);
+                }
             }
         }
         length--;
@@ -275,8 +275,6 @@ static void best_bite(
  * the standard uniform distribution)
  */
 static inline float std_unif(void) {
-    // TODO: convert to Zephyr api
-    // https://docs.zephyrproject.org/latest/doxygen/html/group__random__api.html
     return (float)rand() / (float)RAND_MAX;
 }
 
@@ -384,7 +382,7 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
         // update Dracula's state
         Room **innacc_buf = malloc(2*NUM_PLAYERS * sizeof(Room*));
         struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, innacc_buf);
-        concat_no_duplicate(&innacc, st->can_bite_player_positions); // BUG: this includes the rooms where we just bit players
+        concat_no_duplicate(&innacc, st->can_bite_player_positions);
         walk_ends(innacc, num_moves, &dracula_state);
         free(innacc_buf);
     } else { // BITE!
