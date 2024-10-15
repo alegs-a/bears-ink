@@ -25,7 +25,7 @@ static struct RoomBuffer dracula_state;
 
 
 #ifdef DEBUG
-char *room_names[] = {
+static char *room_names[] = {
     "NHALL",
     "TOMB",
     "GUARDEDWAY",
@@ -49,7 +49,7 @@ char *room_names[] = {
     "BALLROOM",
 };
 
-void print_room_buffer(const struct RoomBuffer buf) {
+static void print_room_buffer(const struct RoomBuffer buf) {
     for (int i = 0; i < buf.length; i++) {
         printf("%s\n", room_names[buf.rooms[i]->room]);
     }
@@ -378,13 +378,13 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     Room **ending = malloc(sizeof(Room*) * NUM_ROOMS);
     struct RoomBuffer ending_distribution;
     ending_distribution.rooms = ending;
-    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
+    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution); // BUG: ignores sunlights
 
     if (!can_bite || bite_score > bite_roll || !(st->can_bite)) { // no bite
         // update Dracula's state
         Room **innacc_buf = malloc(2*NUM_PLAYERS * sizeof(Room*));
         struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, innacc_buf);
-        concat_no_duplicate(&innacc, st->can_bite_player_positions);
+        concat_no_duplicate(&innacc, st->can_bite_player_positions); // BUG: this includes the rooms where we just bit players
         walk_ends(innacc, num_moves, &dracula_state);
         free(innacc_buf);
     } else { // BITE!

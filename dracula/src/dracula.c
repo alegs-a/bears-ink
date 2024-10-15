@@ -500,11 +500,17 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
  * 
  * @returns True if the movement was succesful otherwise false.
  */
-static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room, bool already_moved) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
         display_clear(0x00);
         err_not_adjacent();
+        display_health(gamestate->player_health, gamestate->dracula_health);
+        return false;
+    }
+    if (already_moved) {
+        display_clear(0x00);
+        err_already_moved();
         display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
@@ -560,7 +566,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
         else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
             garlic_thrown = true;
         }
-        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name)) {
+        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) {
             player_moved = true;
         }
     }

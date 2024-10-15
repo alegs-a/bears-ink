@@ -32,7 +32,8 @@ enum Action {
     WATER,
     LIGHT,
     GARLIC,
-    END
+    END,
+    ACTION_ERROR
 };
 
 /**
@@ -53,8 +54,25 @@ struct Player {
     bool can_bite;
 };
 
+enum TokenKind {
+    Player1,
+    Player2,
+    Player3,
+    Player4,
+    Garlic,
+    Sunlight,
+    HolyWater,
+    NumTokenKinds
+};
+
+struct Token {
+    enum TokenKind kind;
+    enum RoomName room;
+};
+
+#define MAX_TOKENS 64
+
 extern Room rooms[NUM_ROOMS];
 
-void dracula_main(void *, void *, void *);
 
 #endif // DEBUG_H
