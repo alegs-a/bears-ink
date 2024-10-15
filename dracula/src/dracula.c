@@ -560,7 +560,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
         else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
             garlic_thrown = true;
         }
-        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name)) {
+        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name) && !player_moved) {
             player_moved = true;
         }
     }
