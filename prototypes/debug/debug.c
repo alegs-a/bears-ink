@@ -54,6 +54,7 @@ static char *room_names[] = {
     "CELLAR",
     "SHALL",
     "BALLROOM",
+    "RESOURCE"
 };
 
 char *token_type_names[] = {
@@ -205,42 +206,39 @@ static enum TokenKind parse_token_kind(const char *str) {
 }
 
 static enum RoomName parse_room_name(const char *str) {
-    for (int i = 0; i < NUM_ROOMS; i++) {
+    for (int i = 0; i < NUM_ROOMS + 1; i++) {
         if (strcmp(str, room_names[i]) == 0) return i;
     }
-    return NUM_ROOMS; // Error value
+    return NUM_ROOMS + 1; // Error value
 }
 
 /*
  * Format to parse:
  * TokenType Room
- *
- * until a blank line is given
  */
-static int get_tokens(struct Token *buffer) {
+static int get_token(struct Token *buffer) {
     size_t nbytes = 32;
     char *buf = malloc(sizeof(char) * nbytes);
-    int num_read = 0;
     char token_type[16];
     char room_name[16];
     printf("Enter Tokens:\n");
     for (;;) {
         getline(&buf, &nbytes, stdin);
         int nreads = sscanf(buf, "%s %s", token_type, room_name);
-        if (nreads < 0) break;
+        if (nreads < 0) return 0; // No more actions
         if (nreads < 2) {
             printf("Bad token format\n");
             continue;
         }
         enum TokenKind kind = parse_token_kind(token_type);
         enum RoomName name = parse_room_name(room_name);
-        if (kind == NumTokenKinds || name == NUM_ROOMS) {
+        if (kind == NumTokenKinds || name > NUM_ROOMS) { // GT for name bc we might want to collect a resource
             printf("Bad token format\n");
             continue;
         }
-        buffer[num_read++] = (struct Token){ .kind = kind, .room = name };
+        *buffer = (struct Token){ .kind = kind, .room = name };
+        return 1;
     }
-    return num_read;
 }
 
 /**
@@ -251,7 +249,7 @@ static int get_tokens(struct Token *buffer) {
  */
 static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
     struct Token tokens[MAX_TOKENS];
-    int token_count = get_tokens(tokens);
+    int token_count = get_token(tokens);
 
     bool error = false;
     int action_val = -1;
@@ -319,7 +317,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
 
     for(;;) {
         struct Token tokens[MAX_TOKENS];
-        int token_count = get_tokens(tokens);
+        int token_count = get_token(tokens);
 
         enum Action resource_val = ACTION_ERROR;
         for (int i = 0; i < token_count; i++) {
