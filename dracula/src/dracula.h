@@ -53,7 +53,7 @@ struct Player {
     bool can_bite;
 };
 
-extern Room rooms[NUM_ROOMS];
+extern Room rooms[ROOM_COUNT];
 
 void dracula_main(void);
 bool token_valid(struct Token token);

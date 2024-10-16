@@ -108,6 +108,11 @@ K_FIFO_DEFINE(display_queue);
  */
 int display_send(uint8_t *bytes, int length)
 {
+    // We discovered the STM32 cannot drive the I2C1 bus and the SPI1 bus
+    // simultaneously, and don't have enough time to reimplement this driver
+    // using the I2C api
+    return 0;
+
     struct spi_buf buffer = {
         .buf = bytes,
         .len = length
