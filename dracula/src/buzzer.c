@@ -17,6 +17,7 @@ static K_THREAD_DEFINE(buzzer, BUZZER_THREAD_STACK_SIZE,
 extern const k_tid_t display_thread_id;
 
 static const struct gpio_dt_spec buzzer_pin = GPIO_DT_SPEC_GET(DT_NODELABEL(rfid_buzzer), gpios);
+static const struct gpio_dt_spec led_pin = GPIO_DT_SPEC_GET(DT_NODELABEL(green_led), gpios);
 
 struct buzzer_queue_item {
     void *fifo_reserved;
@@ -50,24 +51,32 @@ void buzzer_main(void *, void *, void *)
         case STARTUP:
             // BEEEEP
             gpio_pin_set_dt(&buzzer_pin, 1);
+            gpio_pin_set_dt(&led_pin, 1);
             k_msleep(500);
             gpio_pin_set_dt(&buzzer_pin, 0);
+            gpio_pin_set_dt(&led_pin, 0);
             break;
         case READ_OK:
             // BEEP
             gpio_pin_set_dt(&buzzer_pin, 1);
+            gpio_pin_set_dt(&led_pin, 1);
             k_msleep(300);
             gpio_pin_set_dt(&buzzer_pin, 0);
+            gpio_pin_set_dt(&led_pin, 0);
             break;
         case READ_ERROR:
             // BI-BIP
             gpio_pin_set_dt(&buzzer_pin, 1);
+            gpio_pin_set_dt(&led_pin, 1);
             k_msleep(50);
             gpio_pin_set_dt(&buzzer_pin, 0);
+            gpio_pin_set_dt(&led_pin, 0);
             k_msleep(50);
             gpio_pin_set_dt(&buzzer_pin, 1);
+            gpio_pin_set_dt(&led_pin, 1);
             k_msleep(50);
             gpio_pin_set_dt(&buzzer_pin, 0);
+            gpio_pin_set_dt(&led_pin, 0);
             break;
         }
 
