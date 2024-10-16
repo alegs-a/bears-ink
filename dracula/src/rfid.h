@@ -19,7 +19,7 @@ extern "C" {
 extern k_tid_t rfid_thread_id;
 
 // The maximum number of tokens that should be tracked by the driver
-#define MAX_TOKENS 64
+#define MAX_TOKENS (NUM_ROOMS * 4)
 
 enum TokenKind {
     Player1,

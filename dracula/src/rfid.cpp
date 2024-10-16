@@ -46,7 +46,7 @@ int mfrc522_init(const struct device *dev)
     }
 
     mfrc522.PCD_Init();
-    mfrc522.PCD_AntennaOn();
+    // mfrc522.PCD_AntennaOn();
     byte v = mfrc522.PCD_ReadRegister(mfrc522.VersionReg);
     printk("MFRC522 @ %s Software Version: 0x%x\n", config->room_name, v);
     // When 0x00 or 0xFF is returned, communication probably failed
@@ -122,16 +122,47 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 {
     mfrc522.i2c = &room->i2c;
 
-    // mfrc522.PCD_AntennaOn();
+    mfrc522.PCD_AntennaOn();
+
+    // Check tokens we know about -- do this first so they don't show up as 'new' later.
+    for (int i = 0; i < 4; i++) {
+        int token_index = room->room * 4 + i;
+        if (currentTokens[token_index].room == NUM_ROOMS) {
+            // This is not a token; ignore
+            continue;
+        }
+
+        mfrc522.uid.size = 7;
+        mfrc522.uid.sak = 0;
+        memcpy(mfrc522.uid.uidByte, currentTokens[token_index].uid, 7);
+
+        // Wake up all the tokens on this reader
+        byte bufferATQA[2];
+        byte bufferSize = sizeof(bufferATQA);
+        byte result = mfrc522.PICC_WakeupA(bufferATQA, &bufferSize);
+
+        // Select the token we're working with currently
+        result = mfrc522.PICC_Select(&mfrc522.uid, 7 * 8);
+        if (result == MFRC522::STATUS_TIMEOUT) {
+            // This token probably disappeared; forget about it
+            printk("Token %d removed from room %s.\n", currentTokens[token_index].kind, room->room_name);
+            currentTokens[token_index].room = NUM_ROOMS;
+        }
+
+        // Put it into the HALT state
+        mfrc522.PICC_HaltA();
+    }
+
+    // Now check for new cards -- still in the IDLE state
     if (!mfrc522.PICC_IsNewCardPresent()) {
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
         return;
     }
 
     // Read the new card's UID into mfrc522.uid
     if (!mfrc522.PICC_ReadCardSerial()) {
         buzzer_send(READ_ERROR);
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -157,7 +188,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
         buzzer_send(READ_ERROR);
         printk("Unrecognised token\n");
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -175,7 +206,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token: %s\n", game);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -208,7 +239,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         buzzer_send(READ_ERROR);
         printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
         return;
     }
 
@@ -223,22 +254,23 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 
     // We've found a valid token; add it to currentTokens
     k_mutex_lock(&tokensMutex, K_FOREVER);
-    for (int i = 0; i < MAX_TOKENS; i++) {
-        if (currentTokens[i].room != NUM_ROOMS) {
+    for (int i = 0; i < 4; i++) {
+        int token_index = room->room * 4 + i;
+        if (currentTokens[token_index].room != NUM_ROOMS) {
             // This entry is occupied.
             continue;
         }
 
-        currentTokens[i].room = this_token.room;
-        currentTokens[i].kind = this_token.kind;
-        memcpy(currentTokens[i].uid, mfrc522.uid.uidByte, 7);
+        currentTokens[token_index].room = this_token.room;
+        currentTokens[token_index].kind = this_token.kind;
+        memcpy(currentTokens[token_index].uid, mfrc522.uid.uidByte, 7);
         break;
     }
     k_mutex_unlock(&tokensMutex);
 
     // Halt the token. We can wake it up later when we want to check its presence.
     mfrc522.PICC_HaltA();
-    // mfrc522.PCD_AntennaOff();
+    mfrc522.PCD_AntennaOff();
 }
 
 /**
@@ -258,7 +290,7 @@ void detect_current_cards(MFRC522 mfrc522)
         const struct mfrc522_cfg *room =
             (const struct mfrc522_cfg *)get_room(currentTokens[i].room)->config;
         mfrc522.i2c = &room->i2c;
-        // mfrc522.PCD_AntennaOn();
+        mfrc522.PCD_AntennaOn();
 
         mfrc522.uid.size = 7;
         mfrc522.uid.sak = 0;
@@ -278,7 +310,7 @@ void detect_current_cards(MFRC522 mfrc522)
         }
 
         mfrc522.PICC_HaltA();
-        // mfrc522.PCD_AntennaOff();
+        mfrc522.PCD_AntennaOff();
     }
     k_mutex_unlock(&tokensMutex);
 }
@@ -310,7 +342,7 @@ void rfid_onestep()
 {
     MFRC522 mfrc522;
     DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
-    detect_current_cards(mfrc522);
+    // detect_current_cards(mfrc522);
     
 }
 
@@ -320,6 +352,6 @@ void rfid_main(void *, void *, void *)
 
     for (;;) {
         DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
-        detect_current_cards(mfrc522);
+        // detect_current_cards(mfrc522);
     }
 }

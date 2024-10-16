@@ -33,6 +33,7 @@ enum RoomName {
     CELLAR,
     SHALL,
     BALLROOM,
+    RESOURCE_REQUEST,
     NUM_ROOMS
 };
 

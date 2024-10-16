@@ -269,12 +269,14 @@ const char l3[] = "adjacent"; //offset 70
 
 void err_not_adjacent()
 {
+    printk("That room is not adjacent\n");
     display_string(l1, 68, 1);
     display_string(l2, 76, 3);
     display_string(l3, 70, 5);
 }
 void mes_dracula()
 {
+    printk("Dracula is in that room\n");
     display_string(ab1, 64, 1);
     display_string(a2, 74, 3);
     display_string(a3, 80, 5);
@@ -282,6 +284,7 @@ void mes_dracula()
 
 void mes_no_dracula()
 {
+    printk("Dracula is not in that room\n");
     display_string(ab1, 64, 1);
     display_string(b2, 76, 3);
     display_string(b3, 68, 5);
@@ -289,6 +292,7 @@ void mes_no_dracula()
 
 void err_no_water()
 {
+    printk("You have no more holy water\n");
     display_string(cde1, 70, 1);
     display_string(cde2, 74, 3);
     display_string(c3, 64, 5);
@@ -296,6 +300,7 @@ void err_no_water()
 
 void err_no_light()
 {
+    printk("You have no more sunlight\n");
     display_string(cde1, 70, 1);
     display_string(cde2, 74, 3);
     display_string(d3, 70, 5);
@@ -303,6 +308,7 @@ void err_no_light()
 
 void err_no_garlic()
 {
+    printk("You have no more garlic\n");
     display_string(cde1, 70, 1);
     display_string(cde2, 74, 3);
     display_string(e3, 76, 5);
@@ -310,6 +316,7 @@ void err_no_garlic()
 
 void err_already_moved()
 {
+    printk("Already moved this turn\n");
     display_string(f1, 74, 1);
     display_string(f2, 78, 3);
     display_string(f3, 68, 5);
@@ -317,6 +324,7 @@ void err_already_moved()
 
 void err_not_your_turn(int player)
 {
+    printk("Player %d's turn!\n", player);
     switch (player)
     {
         case 1: display_string(p1, 70, 1); break;
@@ -331,6 +339,7 @@ void err_not_your_turn(int player)
 
 void err_invalid_resource()
 {
+    printk("Invalid resource type\n");
     display_string(h1, 74, 1);
     display_string(h2, 70, 3);
     display_string(h3, 80, 5);
@@ -338,6 +347,7 @@ void err_invalid_resource()
 
 void mes_player_bitten(int player)
 {
+    printk("Player %d has been bitten!!\n", player);
     switch (player)
     {
         case 1: display_string(p1, 70, 1); break;
@@ -352,18 +362,23 @@ void mes_player_bitten(int player)
 
 void mes_valid_action()
 {
+    printk("Valid action\n");
     display_string(j1, 78, 2);
     display_string(j2, 76, 4);
 }
 
 void err_too_many_actions()
 {
+    printk("Too many actions\n");
     display_string(k1, 70, 2);
     display_string(k2, 74, 4);
 }
 
 void display_health(int player_lives, int dracula_lives)
 {
+    printk("--------------------------------\n");
+    printk("   Players: %d      Dracula: %d   \n", player_lives, dracula_lives);
+    printk("--------------------------------\n");
     display_image(&image_heart, 0, 0);
 
     switch (player_lives)
@@ -387,6 +402,11 @@ void display_health(int player_lives, int dracula_lives)
 
 void ui_splash()
 {
+    printk(" ____                       _       _\n");
+    printk("|  _ \\ _ __ __ _  ___ _   _| | __ _| |\n");
+    printk("| | | | '__/ _` |/ __| | | | |/ _` | |\n");
+    printk("| |_| | | | (_| | (__| |_| | | (_| |_|\n");
+    printk("|____/|_|  \\__,_|\\___|\\__,_|_|\\__,_(_)\n");
     display_image(&image_dracula, 20, 2);
     k_msleep(10000);
 }
