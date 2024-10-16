@@ -25,17 +25,22 @@ int main()
     }
 
     buzzer_send(STARTUP);
-    rfid_thread_id = k_thread_create(&rfid_thread_data, rfid_stack,
-                                     K_THREAD_STACK_SIZEOF(rfid_stack),
-                                     rfid_main,
-                                     NULL, NULL, NULL,
-                                     RFID_THREAD_PRIORITY, 0, K_NO_WAIT);
+    rfid_onestep();
+    // rfid_thread_id = k_thread_create(&rfid_thread_data, rfid_stack,
+    //                                  K_THREAD_STACK_SIZEOF(rfid_stack),
+    //                                  rfid_main,
+    //                                  NULL, NULL, NULL,
+    //                                  RFID_THREAD_PRIORITY, 0, K_NO_WAIT);
     printk("Initialisation done.\n");
 
     display_clear(0x00);
     ui_splash();
     // display_string("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", 0, 0);
-    dracula_main();
+    // dracula_main();
+    for (;;) {
+        k_msleep(1000);
+        ui_splash();
+    }
 
     return 0;
 }

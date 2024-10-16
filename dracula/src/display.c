@@ -1,6 +1,7 @@
 #include "display.h"
 #include "rfid.h"
 
+#include <string.h>
 #include <zephyr/irq.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
@@ -137,6 +138,7 @@ int display_send(uint8_t *bytes, int length)
 int display_command(uint8_t *command, int length)
 {
     // command low
+    printk("C");
     int error = gpio_pin_set_dt(&display_pin_dc, 0);
     if (error)
         return error;
@@ -157,6 +159,7 @@ int display_command(uint8_t *command, int length)
 int display_data(uint8_t *data, int length)
 {
     // command high
+    printk("D");
     int error = gpio_pin_set_dt(&display_pin_dc, 1);
     if (error)
         return error;
@@ -234,6 +237,7 @@ int display_init()
         COMMAND_WAKE
     };
 
+    printk("I");
     error = display_command(initialisation, sizeof(initialisation));
     if (error) {
         printk("display initialisation sequence failed with %i\n", error);
@@ -275,11 +279,15 @@ int display_set_bounds(uint8_t column_begin, uint8_t column_end,
 
 void display_clear(unsigned char byte)
 {
+    k_mutex_lock(&rfid_thread_mutex, K_FOREVER);
+    printk("0");
     display_set_bounds(0, DISPLAY_WIDTH - 1, 0, DISPLAY_HEIGHT - 1);
 
-    for (int i = 0; i < 1024; i++) {
-        display_data(&byte, 1);
-    }
+    uint8_t* buf = malloc(1024);
+    memset(buf, byte, 1024);
+    display_data(buf, 1024);
+    free(buf);
+    k_mutex_unlock(&rfid_thread_mutex);
 }
 
 void display_sleep()
@@ -309,11 +317,16 @@ void display_invert(bool inverted)
 int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
         uint8_t row_end, uint8_t *data, unsigned int n)
 {
+    k_mutex_lock(&rfid_thread_mutex, K_FOREVER);
+    printk("W");
     int error = display_set_bounds(column_begin, column_end, row_begin, row_end);
-    if (error)
+    if (error) {
+        k_mutex_unlock(&rfid_thread_mutex);
         return error;
+    }
 
     error = display_data(data, n);
+    k_mutex_unlock(&rfid_thread_mutex);
     if (error)
         return error;
 

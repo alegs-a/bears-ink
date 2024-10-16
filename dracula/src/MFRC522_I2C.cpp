@@ -461,6 +461,7 @@ byte MFRC522::PICC_REQA_or_WUPA(	byte command, 		///< The command to send - PICC
 		return STATUS_NO_ROOM;
 	}
 	PCD_ClearRegisterBitMask(CollReg, 0x80);		// ValuesAfterColl=1 => Bits received after collision are cleared.
+	return STATUS_TIMEOUT;
 	validBits = 7;									// For REQA and WUPA we need the short frame format - transmit only 7 bits of the last (and only) byte. TxLastBits = BitFramingReg[2..0]
 	status = PCD_TransceiveData(&command, 1, bufferATQA, bufferSize, &validBits);
 	if (status != STATUS_OK) {

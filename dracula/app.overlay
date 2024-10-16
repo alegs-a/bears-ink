@@ -51,21 +51,21 @@
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "TOMB";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "GUARDEDWAY";
 			};
 		};
 
 		mux_i2c@6 {
 			reg = <6>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "ti,tca9548a-channel";
@@ -73,28 +73,28 @@
 			rfid@2c {
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "GALLERY";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "ALLEY";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "BONEPIT";
 			};
 		};
 
 		mux_i2c@2 {
 			reg = <2>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "ti,tca9548a-channel";
@@ -102,35 +102,35 @@
 			rfid@2c {
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "ENTRANCE";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "VENT";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "DUNGEON";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "DINING";
 			};
 		};
 
 		mux_i2c@4 {
 			reg = <4>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "ti,tca9548a-channel";
@@ -138,35 +138,35 @@
 			rfid@2c {
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "NEST";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "BATHROOM";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "CANAL";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "STAIRCASE";
 			};
 		};
 
 		mux_i2c@3 {
 			reg = <3>;
-			status = "okay";
+			status = "disabled";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			compatible = "ti,tca9548a-channel";
@@ -174,28 +174,28 @@
 			rfid@2c {
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "CELLAR";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "SHALL";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "BALLROOM";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
-				status = "okay";
+				status = "disabled";
 				bearsink,room = "NUM_ROOMS";
 			};
 		};

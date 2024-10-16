@@ -98,6 +98,7 @@ struct DraculaToken {
     enum TokenKind kind;
 };
 
+K_MUTEX_DEFINE(rfid_thread_mutex);
 K_MUTEX_DEFINE(tokensMutex);
 
 /**
@@ -120,11 +121,14 @@ DraculaToken currentTokens[MAX_TOKENS];
  */
 void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
 {
+    k_mutex_lock(&rfid_thread_mutex, K_FOREVER);
+    printk("N");
     mfrc522.i2c = &room->i2c;
 
     // mfrc522.PCD_AntennaOn();
     if (!mfrc522.PICC_IsNewCardPresent()) {
         // mfrc522.PCD_AntennaOff();
+        k_mutex_unlock(&rfid_thread_mutex);
         return;
     }
 
@@ -132,6 +136,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     if (!mfrc522.PICC_ReadCardSerial()) {
         buzzer_send(READ_ERROR);
         // mfrc522.PCD_AntennaOff();
+        k_mutex_unlock(&rfid_thread_mutex);
         return;
     }
 
@@ -158,6 +163,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         buzzer_send(READ_ERROR);
         printk("Unrecognised token\n");
         // mfrc522.PCD_AntennaOff();
+        k_mutex_unlock(&rfid_thread_mutex);
         return;
     }
 
@@ -176,6 +182,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         printk("Unrecognised Bears Ink token: %s\n", game);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         // mfrc522.PCD_AntennaOff();
+        k_mutex_unlock(&rfid_thread_mutex);
         return;
     }
 
@@ -209,6 +216,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         // mfrc522.PCD_AntennaOff();
+        k_mutex_unlock(&rfid_thread_mutex);
         return;
     }
 
@@ -239,6 +247,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Halt the token. We can wake it up later when we want to check its presence.
     mfrc522.PICC_HaltA();
     // mfrc522.PCD_AntennaOff();
+    k_mutex_unlock(&rfid_thread_mutex);
 }
 
 /**
@@ -248,6 +257,8 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
  */
 void detect_current_cards(MFRC522 mfrc522)
 {
+    k_mutex_lock(&rfid_thread_mutex, K_FOREVER);
+    printk("P");
     k_mutex_lock(&tokensMutex, K_FOREVER);
     for (int i = 0; i < MAX_TOKENS; i++) {
         if (currentTokens[i].room == NUM_ROOMS) {
@@ -281,6 +292,7 @@ void detect_current_cards(MFRC522 mfrc522)
         // mfrc522.PCD_AntennaOff();
     }
     k_mutex_unlock(&tokensMutex);
+    k_mutex_unlock(&rfid_thread_mutex);
 }
 
 int rfid_get_tokens(struct Token *tokens)
@@ -309,6 +321,7 @@ int rfid_get_tokens(struct Token *tokens)
 void rfid_onestep()
 {
     MFRC522 mfrc522;
+
     DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
     detect_current_cards(mfrc522);
     
@@ -319,7 +332,7 @@ void rfid_main(void *, void *, void *)
     MFRC522 mfrc522;
 
     for (;;) {
-        DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
-        detect_current_cards(mfrc522);
+        // DT_INST_FOREACH_STATUS_OKAY(MFRC522_DETECT_NEW)
+        // detect_current_cards(mfrc522);
     }
 }

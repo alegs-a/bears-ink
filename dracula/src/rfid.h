@@ -10,7 +10,7 @@ extern "C" {
 #include "room.h"
 
 // The stack size of the rfid thread.
-#define RFID_THREAD_STACK_SIZE 2048
+#define RFID_THREAD_STACK_SIZE 8192
 
 // The thread priority of the thread logic.
 #define RFID_THREAD_PRIORITY 5
@@ -35,6 +35,8 @@ struct Token {
     enum TokenKind kind;
     enum RoomName room;
 };
+
+extern struct k_mutex rfid_thread_mutex;
 
 /**
  * @brief Get a list of the currently tracked tokens and their positions
