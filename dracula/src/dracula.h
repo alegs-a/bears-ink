@@ -55,11 +55,7 @@ struct Player {
 
 extern Room rooms[NUM_ROOMS];
 
-#ifdef DEBUG
-extern char *room_names[NUM_ROOMS];
-#endif
-
-void dracula_main();
+void dracula_main(void);
 bool token_valid(struct Token token);
 
 #endif // DRACULA_H

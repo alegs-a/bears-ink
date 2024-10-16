@@ -13,8 +13,6 @@
 #endif
 
 
-
-
 // number of rounds since the last time Dracula bit a player
 static int last_bite;
 // number of rounds since the last players received POSITIVE information on Dracula's position
@@ -25,7 +23,7 @@ static struct RoomBuffer dracula_state;
 
 
 #ifdef DEBUG
-char *room_names[] = {
+static char *room_names[] = {
     "NHALL",
     "TOMB",
     "GUARDEDWAY",
@@ -49,7 +47,7 @@ char *room_names[] = {
     "BALLROOM",
 };
 
-void print_room_buffer(const struct RoomBuffer buf) {
+static void print_room_buffer(const struct RoomBuffer buf) {
     for (int i = 0; i < buf.length; i++) {
         printf("%s\n", room_names[buf.rooms[i]->room]);
     }
@@ -92,8 +90,10 @@ static void walk_ends(
         int len = starting->length;
         for (int i = 0; i < len; i++) {
             for (int j = 0; j < starting->rooms[i]->adjacent->length; j++) {
-                add_no_duplicate(starting,
-                        starting->rooms[i]->adjacent->rooms[j]);
+                Room *candidate = starting->rooms[i]->adjacent->rooms[j];
+                if (contains_room(innaccessible, candidate) < 0) {
+                    add_no_duplicate(starting, candidate);
+                }
             }
         }
         length--;
@@ -275,8 +275,6 @@ static void best_bite(
  * the standard uniform distribution)
  */
 static inline float std_unif(void) {
-    // TODO: convert to Zephyr api
-    // https://docs.zephyrproject.org/latest/doxygen/html/group__random__api.html
     return (float)rand() / (float)RAND_MAX;
 }
 
@@ -378,7 +376,7 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     Room **ending = malloc(sizeof(Room*) * NUM_ROOMS);
     struct RoomBuffer ending_distribution;
     ending_distribution.rooms = ending;
-    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
+    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution); // BUG: ignores sunlights
 
     if (!can_bite || bite_score > bite_roll || !(st->can_bite)) { // no bite
         // update Dracula's state

@@ -12,6 +12,8 @@ automate Dracula's actions and display game information to the players using an
 LCD screen and LEDs, that provides an engaging user experience. Will the players
 be able to take down Dracula in time?
 
+The full rules are [here](docs/rules.md).
+
 Contents:
 1. [Dracula](#Dracula)
 2. [Development Environment](#2-development-environment)
@@ -23,6 +25,7 @@ Contents:
 8. [Using the Display](#8-using-the-display)
 9. [Privacy and Ethical considerations](#9-privacy-and-ethical-considerations)
 10. [Additional Resources](#10-additional-resources)
+11. [Issues](#11-issues)
 
 The majority of our original work can be found in the `dracula/src` directory
 (see [Repository Structure](#7-repository-structure)).
@@ -432,3 +435,10 @@ server and with GitHub (after the redirect).
   [`prototypes`](/prototypes/)
 - [Weekly Notes](/docs/notes/)
 - [Github Wiki](https://github.com/alegs-a/bears-ink/wiki)
+
+## 11. Issues
+
+The following are issues that we are currently aware of:
+
+- If players want to end their turn after moving and without using a resource,
+  they have to press the end turn button twice.

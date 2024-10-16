@@ -1,9 +1,14 @@
-#include "debug.h"
 #include "../../dracula/src/ai.h"
+#include "../../dracula/src/room.h"
+#include "debug.h"
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 
 // Intialise rooms and connections
-Room rooms[ROOM_COUNT] = {
+Room rooms[NUM_ROOMS] = {
     {.room=NHALL, .adjacent=&(struct RoomBuffer){.length=2, .rooms=&(Room*[2]){&rooms[TOMB], &rooms[ENTRANCE]}[0]}},
     {.room=TOMB, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[BONEPIT]}[0]}},
     {.room=GUARDEDWAY, .adjacent=&(struct RoomBuffer){.length=2, .rooms=&(Room*[2]){&rooms[GALLERY], &rooms[TOMB]}[0]}},
@@ -27,6 +32,44 @@ Room rooms[ROOM_COUNT] = {
     {.room=BALLROOM, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[DINING], &rooms[GALLERY], &rooms[STAIRCASE]}[0]}}
 };
 
+static char *room_names[] = {
+    "NHALL",
+    "TOMB",
+    "GUARDEDWAY",
+    "GALLERY",
+    "ALLEY",
+    "BONEPIT",
+    "ENTRANCE",
+    "VENT",
+    "DUNGEON",
+    "DINING",
+    "LIBRARY",
+    "CRYPT",
+    "PASSAGE",
+    "CHAPEL",
+    "NEST",
+    "BATHROOM",
+    "CANAL",
+    "STAIRCASE",
+    "CELLAR",
+    "SHALL",
+    "BALLROOM",
+    "RESOURCE"
+};
+
+char *token_type_names[] = {
+    "Player1",
+    "Player2",
+    "Player3",
+    "Player4",
+    "Garlic",
+    "Sunlight",
+    "HolyWater"
+};
+
+// Game state with its corresponding mutex lock
+struct GameState gamestate;
+
 static void full_dracula_turn(struct GameState *gamestate);
 static void full_players_turn(struct GameState *gamestate);
 
@@ -34,27 +77,28 @@ static void full_players_turn(struct GameState *gamestate);
  * @brief Runs the game.
  */
 int main(void) {
+    // Initialise the AI
     dracula_setup();
-
-    // Initialise players
-    struct Player players[PLAYER_COUNT] = {
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
-        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true}
-    };
-
-    //Initialise player positions
-    struct RoomBuffer player_pos = {.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
-        {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
-
+  
     // Initialise gamestate
-    struct GameState gamestate = {.player_health=PLAYER_HEALTH, 
-        .garlic=MAX_GARLIC, .dracula_health=DRACULA_HEALTH, .can_bite=true, 
-        .players=&players[0], .player_positions=player_pos,
-        .can_bite_player_positions=player_pos,
+    gamestate = (struct GameState){.player_health=PLAYER_HEALTH, 
+        .garlic=MAX_GARLIC, .dracula_health=DRACULA_HEALTH, 
+        .can_bite=true, .cur_player=0, .player_resting = false,
         .sunlights_from={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]},
         .sunlights_to={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]}};
+
+    // Initialise players
+    gamestate.players = &(struct Player [PLAYER_COUNT]){
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true},
+        {.num_water=INIT_WATER, .num_light=INIT_LIGHT, .turn_skipped=false, .can_bite=true}}[0];
+    
+    //Initialise player positions
+    gamestate.player_positions = (struct RoomBuffer){.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
+        {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
+    gamestate.can_bite_player_positions = (struct RoomBuffer){.length=NUM_PLAYERS, .rooms=&(Room*[PLAYER_COUNT])
+        {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
 
     // Main Game Loop
     for (;;) {
@@ -63,19 +107,15 @@ int main(void) {
 
         //Handle game ending
         if (gamestate.player_health <= 0) {
-            //TODO handle game loss
-            printf("Dracula wins!");
+            printf("Dracula wins!\n");
             break;
         } else if (gamestate.dracula_health <= 0) {
-            //TODO handle game win
-            printf("Player's win!");
+            printf("Player's win!\n");
             break;
         }
     }
 
     dracula_cleanup();
-
-    return 0;
 }
 
 /**
@@ -97,22 +137,169 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
 }
 
 /**
+ * @brief Check if a given token provides a valid action.
+ * 
+ * @param token The token that will be checked.
+ * 
+ * @returns True if the action is valid, false otherwise.
+ */
+bool token_valid(struct Token token) {
+    uint8_t player = gamestate.cur_player;
+    enum RoomName room = token.room;
+    bool valid = true;
+
+    if (!gamestate.player_resting) {
+        if (token.room == NUM_ROOMS) {
+            valid = false;
+        } else if (token.kind == Garlic) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.garlic <= 0) {
+                valid = false;
+            }
+        } else if (token.kind == Sunlight) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)  &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.players[player].num_light <= 0) {
+                valid = false;
+            }
+        } else if (token.kind == HolyWater) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            } else if (gamestate.players[player].num_water <= 0) {
+                valid = false;
+            }
+        } else if ((token.kind == Player1 && player == 0) ||
+                (token.kind == Player2 && player == 1) ||
+                (token.kind == Player3 && player == 2) ||
+                (token.kind == Player4 && player == 3) ) {
+            if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
+                    gamestate.player_positions.rooms[player]->room != room) {
+                valid = false;
+            }
+        } else {
+            valid = false;
+        }
+    } else {
+        valid = (token.room == NUM_ROOMS && (token.kind == HolyWater || token.kind == Sunlight));
+    }
+
+    return valid;
+}
+
+static void display_health(int player_lives, int dracula_lives) {
+    printf("Player lives: %d\nDracula lives: %d\n", player_lives, dracula_lives);
+}
+
+static void player_bitten(uint8_t player_num) {
+    printf("Player %d was bitten!\n", player_num + 1);
+}
+
+static enum TokenKind parse_token_kind(const char *str) {
+    for (int i = 0; i < NumTokenKinds; i++) {
+        if (strcmp(str, token_type_names[i]) == 0) return i;
+    }
+    printf("Error: Bad token kind (%s)\n", str);
+    return NumTokenKinds; // Error value
+}
+
+static enum RoomName parse_room_name(const char *str) {
+    for (int i = 0; i < NUM_ROOMS + 1; i++) {
+        if (strcmp(str, room_names[i]) == 0) return i;
+    }
+    printf("Error: Bad room name (%s)\n", str);
+    return NUM_ROOMS + 1; // Error value
+}
+
+/*
+ * Format to parse:
+ * TokenType Room
+ */
+static int get_token(struct Token *buffer) {
+    size_t nbytes = 32;
+    char *buf = malloc(sizeof(char) * nbytes);
+    char token_type[16];
+    char room_name[16];
+    printf("Enter Tokens:\n");
+    for (;;) {
+        getline(&buf, &nbytes, stdin);
+        int nreads = sscanf(buf, "%s %s", token_type, room_name);
+        if (nreads < 0) return 0; // No more actions
+        if (nreads < 2) {
+            printf("Bad token format\n");
+            continue;
+        }
+        enum TokenKind kind = parse_token_kind(token_type);
+        enum RoomName name = parse_room_name(room_name);
+        if (kind == NumTokenKinds || name > NUM_ROOMS) continue; // parse error(s) already printed
+        *buffer = (struct Token){ .kind = kind, .room = name };
+        return 1;
+    }
+}
+
+/**
  * @brief Retrieves the commited action from the player.
  *
  * @returns A the current turn action which conatins the action to do and 
  * which room it will take place in.
  */
-static struct Turn player_input(void) {
-    // TODO make input from RFID readers instead of scanf
-    char action[3];
-    printf("Input Action:\n");
-    scanf("%s", action);
-    uint8_t action_val = atoi(action);
+static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
+    struct Token tokens[MAX_TOKENS];
+    int token_count = get_token(tokens);
 
-    char room[2];
-    printf("Input Room:\n");
-    scanf("%s", room);
-    uint8_t room_val = atoi(room);
+    bool error = false;
+    int action_val = -1;
+    int room_val = -1;
+    for (int i = 0; i < token_count; i++) {
+        if ((tokens[i].kind == Player1 && player == 0) ||
+            (tokens[i].kind == Player2 && player == 1) ||
+            (tokens[i].kind == Player3 && player == 2) ||
+            (tokens[i].kind == Player4 && player == 3)) {
+            if (gamestate->player_positions.rooms[player]->room != tokens[i].room) {
+                if (action_val != -1) {
+                    error = true;
+                    break;
+                }
+                action_val = MOVE;
+                room_val = tokens[i].room;
+            }
+        }
+        else if (tokens[i].kind == Sunlight) {
+            if (action_val != -1) {
+                error = true;
+                break;
+            }
+            action_val = LIGHT;
+            room_val = tokens[i].room;
+        }
+        else if (tokens[i].kind == HolyWater) {
+            if (action_val != -1) {
+                error = true;
+                break;
+            }
+            action_val = WATER;
+            room_val = tokens[i].room;
+        }
+        else if (tokens[i].kind == Garlic) {
+            if (action_val != -1) {
+                error = true;
+                break;
+            }
+            action_val = GARLIC;
+            room_val = tokens[i].room;
+        }
+    }
+    if (action_val == -1) {
+        printf("Ending turn\n");
+        action_val = END;
+    }
+    if (error) {
+        printf("Error: Too many actions\n");
+        action_val = ACTION_ERROR;
+    }
 
     return (struct Turn){.action=action_val, .room_name=room_val};
 } 
@@ -126,25 +313,37 @@ static struct Turn player_input(void) {
  * @param gamestate The current board gamestate.
  */
 static void player_rest(uint8_t player, struct GameState *gamestate) {
+    gamestate->player_resting = true;
+
     for(;;) {
-        // TODO make input from RFID readers instead of scanf
-        char resource[3];
-        printf("Choose Resource:\n");
-        scanf("%s", resource);
-        int resource_val = atoi(resource);
+        struct Token tokens[MAX_TOKENS];
+        int token_count = get_token(tokens);
+
+        enum Action resource_val = ACTION_ERROR;
+        for (int i = 0; i < token_count; i++) {
+            if (tokens[i].room == NUM_ROOMS) {
+                if (tokens[i].kind == HolyWater) {
+                    resource_val = WATER;
+                } else if (tokens[i].kind == Sunlight) {
+                    resource_val = LIGHT;
+                }
+            }
+        }
 
         if (resource_val == WATER) {
             if (gamestate->players[player].num_water < MAX_WATER) {
                 gamestate->players[player].num_water++;
             }
+            gamestate->player_resting = true;
             break;
         } else if (resource_val == LIGHT) {
             if (gamestate->players[player].num_light < MAX_LIGHT) {
                 gamestate->players[player].num_light++;
             }
+            gamestate->player_resting = true;
             break;
         } else {
-            printf("Invalid Resource\n");
+            printf("Error: Invalid resource\n");
         }
     }
 }
@@ -165,20 +364,22 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
 static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
-        printf("The room is not adjacent\n");
+        printf("Error: not adjacent\n");
         return false;
     }
     if (gamestate->players[player].num_water <= 0) {
-        printf("No more water\n");
+        printf("Error: no water\n");
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
         gamestate->dracula_health--;
         gamestate->can_bite = false;
-        printf("Dracula is in that room with now %d health.\n", gamestate->dracula_health);
+        printf("Dracula is here!\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        printf("Dracula is not in that room.\n");
+        printf("Dracula is not here\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->players[player].num_water--;
     return true;
@@ -197,19 +398,22 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
  * @returns True if creating light was successful otherwise false.
  */
 static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomName room) {
-    if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
-        printf("The room is not adjacent\n");
+    if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
+                gamestate->player_positions.rooms[player]->room != room) {
+        printf("Error: room is not adjacent\n");
         return false;
     }
-    if (gamestate->players[player].num_light <= 0) {
-        printf("No more light\n");
+    if (gamestate->players[player].num_light <= 0 ) {
+        printf("Error: no light\n");
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
-        printf("Dracula is in that room with %d health.\n", gamestate->dracula_health);
+        printf("Dracula is here!\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        printf("Dracula is not in that room.\n");
+        printf("Dracula not is here\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     add_with_duplicate(&(gamestate->sunlights_from), gamestate->player_positions.rooms[player]);
     add_with_duplicate(&(gamestate->sunlights_to), &rooms[room]);
@@ -233,18 +437,20 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
 static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
-        printf("The room is not adjacent\n");
+        printf("Error: not adjacent\n");
         return false;
     }
     if (gamestate->garlic <= 0) {
-        printf("No more garlic\n");
+        printf("Error: no garlic\n");
         return false;
     }
 
     if (dracula_is_present(&rooms[room])) {
-        printf("Dracula is in that room with %d health.\n", gamestate->dracula_health);
+        printf("Dracula is here!\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     } else {
-        printf("Dracula is not in that room.\n");
+        printf("Dracula is not here\n");
+        display_health(gamestate->player_health, gamestate->dracula_health);
     }
     gamestate->garlic--;
     return true;
@@ -262,9 +468,13 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
  * 
  * @returns True if the movement was succesful otherwise false.
  */
-static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room) {
+static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room, bool already_moved) {
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
-        printf("The room is not adjacent\n");
+        printf("Error: not adjacent!\n");
+        return false;
+    }
+    if (already_moved) {
+        printf("Error: player has already moved\n");
         return false;
     }
     gamestate->player_positions.rooms[player] = &rooms[room];
@@ -290,32 +500,31 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
         gamestate->players[player].can_bite = false;
         return;
     }
-    printf("Player %d's turn.\n", player);
 
     bool player_moved = false;
     bool garlic_thrown = false;
     for (;;) {
-        struct Turn turn = player_input();
+        struct Turn turn = player_input(player, gamestate);
+        if (turn.action == ACTION_ERROR) continue;
         if (turn.action == END) {
             // Rest occurs when no action has been done
             if (!player_moved && !garlic_thrown) { 
                 player_rest(player, gamestate);
             }
-            break;
+            return;
         }
-        else if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) {
-            break;
-        }
-        else if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) {
-            break;
-        }
-        else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
-            garlic_thrown = true;
-        }
-        else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name)) {
-            player_moved = true;
-        }
+        if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) return;
+        if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) return;
+        if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) garlic_thrown = true;
+        if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) player_moved = true;
     }
+}
+
+static void print_room_buffer(const struct RoomBuffer buf) {
+    for (int i = 0; i < buf.length; i++) {
+        printf("%s\n", room_names[buf.rooms[i]->room]);
+    }
+    printf("\n");
 }
 
 /**
@@ -329,8 +538,15 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
 static void full_players_turn(struct GameState *gamestate) {
     gamestate->garlic = MAX_GARLIC;
     gamestate->can_bite_player_positions.length = 0;
+
+    printf("Player positions:\n");
+    print_room_buffer(gamestate->player_positions);
+
     for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
+        gamestate->cur_player = i;
+
         player_turn(i, gamestate);
+
         if (gamestate->players[i].can_bite) {
             add_with_duplicate(&(gamestate->can_bite_player_positions), gamestate->player_positions.rooms[i]);
         }
@@ -359,18 +575,22 @@ static void full_dracula_turn(struct GameState *gamestate) {
             for (uint8_t j = 0; j < bites.length; j++) {
                 if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
                     gamestate->players[i].turn_skipped = true;
-                    gamestate->player_health--;
+                    if (gamestate->player_health > 0) { 
+                        gamestate->player_health--;
+                    }
 
                     // Players lose one water per bite
                     if (gamestate->players[i].num_water > 0) {
                         gamestate->players[i].num_water--;   
                     }
-                    printf("Player %d has been bitten and loses one water. Players now have %d health.\n", i,  gamestate->player_health);
+
+                    player_bitten(i);
+                    display_health(gamestate->player_health, gamestate->dracula_health);
                     break;
                 }               
             }
         }
-    }    
+    }
     gamestate->can_bite = true; 
     gamestate->sunlights_from.length = 0;
     gamestate->sunlights_to.length = 0;
