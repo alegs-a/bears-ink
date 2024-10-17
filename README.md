@@ -186,7 +186,7 @@ The full bill of materials for the electronics is as follows:
 | Male-Female Jumpers                      | [Jumper Wire 20cm Ribbon M/F](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                           | 1   | [3.95$ (Core Electronics)](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                                                        | 3.95$      |
 | Male-Male Jumpers                        | [Male to Male Jumper Wires](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)            | 1   | [7.30$ (Core Electronics)](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)                                       | 7.30$      |
 | Male Headers                             | [Male Headers 2.56mm](https://core-electronics.com.au/header-male-pin-01x20.html)                                             | 2   | [0.35$ (Core Electronics)](https://core-electronics.com.au/header-male-pin-01x20.html)                                                                  | 0.70$      |
-| Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 2   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
+| Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 4   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
 | Shipping                                 |                                                                                                                               |     |                                                                                                                                                         | 10.20$     |
 | Total Cost                               |                                                                                                                               |     |                                                                                                                                                         | 410.36$    |
 
@@ -328,7 +328,7 @@ each reader represents
 
 ## 7. Project Overview
 
-In Dracula, there five top level components:
+There five top level components:
 - **RFID Sensors** - The driver provides the information about each sensor and
   any tokens placed on top of them. This is implemented at [`rfid.cpp` /
   `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
@@ -346,46 +346,6 @@ In Dracula, there five top level components:
 
 The entrypoint to the game logic is located at
 [`dracula/src/main.c`](dracula/src/main.c).
-
-```mermaid
----
-Component Architecture:
----
-classDiagram
-  Dracula <|-- AI
-  Dracula <|-- UI
-  UI <|-- Display
-  Dracula <|-- RFID
-  Dracula <|-- Buzzer
-  Dracula <|-- LEDStrip
-  class UI {
-    ui_splash()
-  }
-  class Display {
-    display_write()
-    display_image()
-  }
-  class RFID {
-    rfid_get_tokens()
-  }
-  class Buzzer {
-    buzzer_send()
-  }
-```
-
-```mermaid
----
-title: Game Logic Flow
----
-flowchart LR
-  Initialisation --> P1[Player1]
-  P1 --> A{Errors?}
-  A -->|Yes| P1
-  A -->|No| P2[Player2]
-  P2 --> B{Errors?}
-  B -->|Yes| P2
-  B -->|No| C[IsEnd?]
-```
 
 ## 8. Repository Structure
 
@@ -420,6 +380,7 @@ The majority of our original work is contained in the `assets/`, `dracula/`, and
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Prototypes of AI and game logic, *not* compiled for or sent to the board.
     - [`debug`](/prototypes/debug) - A version of the C game logic that uses the ai and room code that is loaded onto the device, but does IO in the terminal. Useful for debugging the ai.
+    - [`python`](/prototypes/python) - Some python prototyping of the game rules.
     - [`quantum_dracula`](/prototypes/quantum_dracula) - The Haskell prototype of the Quantum Dracula ai.
 - [`scripts`](/scripts)
   - [`build.sh`](/scripts/build.sh) - Builds the source file.
@@ -427,7 +388,7 @@ The majority of our original work is contained in the `assets/`, `dracula/`, and
   - [`convert_png.py`](/scripts/convert_png.py) - Converts PNG files to memory buffers able to be written to the display in code.
   - [`flash.sh`](/scripts/flash.sh) - Flashes the board with the most recent build.
   - [`format.sh`](/scripts/format.sh) - Autoformats source files.
-  - [`jlink_postinit.sh`](/scripts/jlink_postinit.sh) -
+  - [`jlink_postinit.sh`](/scripts/jlink_postinit.sh) - To be run inside the container after running because setup requires advanced privileges, to allow debugging.
   - [`screen.sh`](/scripts/screen.sh) - Connects to the serial port on the development board to monitor system logs.
   - [`source_zephyr.sh`](/scripts/source_zephyr.sh) - Initialises zephyr environment variables from the SDK location.
   - [`usbip_wsl_attach.sh`](/scripts/usbip_wsl_attach.sh) - Automated script to detect and attach the to microcontroller communications.
