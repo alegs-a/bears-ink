@@ -516,7 +516,7 @@ void err_already_moved()
 
 void err_not_your_turn(int player)
 {
-    printk("Player %d's turn!\n", player);
+    printk("\nPlayer %d's turn!\n", player);
     switch (player)
     {
         case 1: display_string(p1, 70, 1); break;
@@ -594,11 +594,17 @@ void display_health(int player_lives, int dracula_lives)
 
 void players_win()
 {
+    printk("--------------------------------\n");
+    printk("          Players win!          \n");
+    printk("--------------------------------\n");
     display_image(&image_player_win, 0, 0);
 }
 
 void dracula_wins()
 {
+    printk("--------------------------------\n");
+    printk("         Dracula wins...        \n");
+    printk("--------------------------------\n");
     display_image(&image_dracula_win, 0, 0);
 }
 

@@ -145,7 +145,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
         result = mfrc522.PICC_Select(&mfrc522.uid, 7 * 8);
         if (result == MFRC522::STATUS_TIMEOUT) {
             // This token probably disappeared; forget about it
-            printk("Token %d removed from room %s.\n", currentTokens[token_index].kind, room->room_name);
+            printk("[Token (%d) removed from %s]\n", currentTokens[token_index].kind, room->room_name);
             currentTokens[token_index].room = NUM_ROOMS;
         }
 
@@ -162,6 +162,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Read the new card's UID into mfrc522.uid
     if (!mfrc522.PICC_ReadCardSerial()) {
         buzzer_send(READ_ERROR);
+        printk("[Invalid token in %s]\n", room->room_name);
         mfrc522.PCD_AntennaOff();
         return;
     }
@@ -187,7 +188,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Make sure it's a Bears Ink token
     if (strncmp(reinterpret_cast<char*>(data + 4), "thebears.ink", 12) != 0) {
         buzzer_send(READ_ERROR);
-        printk("Unrecognised token\n");
+        printk("[Invalid token in %s]\n", room->room_name);
         mfrc522.PCD_AntennaOff();
         return;
     }
@@ -204,8 +205,7 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Make sure it's a Dracula game token
     if (strncmp(game, "/dracula/", 9) != 0) {
         buzzer_send(READ_ERROR);
-        printk("Unrecognised Bears Ink token: %s\n", game);
-        mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
+        printk("[Invalid token in %s]\n", room->room_name);
         mfrc522.PCD_AntennaOff();
         return;
     }
@@ -216,28 +216,28 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     this_token.room = room->room;
     if (strcmp(kind, "player1") == 0) {
         this_token.kind = Player1;
-        printk("Found Bears Ink token in room %s: Player1\n", room->room_name);
+        printk("[Player 1 placed in %s] ", room->room_name);
     } else if (strcmp(kind, "player2") == 0) {
         this_token.kind = Player2;
-        printk("Found Bears Ink token in room %s: Player2\n", room->room_name);
+        printk("[Player 2 placed in %s] ", room->room_name);
     } else if (strcmp(kind, "player3") == 0) {
         this_token.kind = Player3;
-        printk("Found Bears Ink token in room %s: Player3\n", room->room_name);
+        printk("[Player 3 placed in %s] ", room->room_name);
     } else if (strcmp(kind, "player4") == 0) {
         this_token.kind = Player4;
-        printk("Found Bears Ink token in room %s: Player4\n", room->room_name);
+        printk("[Player 4 placed in %s] ", room->room_name);
     } else if (strcmp(kind, "garlic") == 0) {
         this_token.kind = Garlic;
-        printk("Found Bears Ink token in room %s: Garlic\n", room->room_name);
+        printk("[Garlic placed in %s] ", room->room_name);
     } else if (strcmp(kind, "sun") == 0) {
         this_token.kind = Sunlight;
-        printk("Found Bears Ink token in room %s: Sunlight\n", room->room_name);
+        printk("[Sunlight placed in %s] ", room->room_name);
     } else if (strcmp(kind, "water") == 0) {
         this_token.kind = HolyWater;
-        printk("Found Bears Ink token in room %s: HolyWater\n", room->room_name);
+        printk("[Holy Water placed in %s] ", room->room_name);
     } else {
         buzzer_send(READ_ERROR);
-        printk("Unrecognised Bears Ink token in room %s: (%d) %s\n", room->room_name, url_len, data);
+        printk("[Invalid token in %s]\n", room->room_name);
         mfrc522.PICC_DumpToSerial(&(mfrc522.uid));
         mfrc522.PCD_AntennaOff();
         return;
@@ -246,10 +246,10 @@ void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
     // Send the token to the game logic
     if (token_valid(this_token)) {
         buzzer_send(READ_OK);
-        printk("Accepted\n");
+        printk("(Accepted)\n");
     } else {
         buzzer_send(READ_ERROR);
-        printk("Rejected\n");
+        printk("(Rejected)\n");
     }
 
     // We've found a valid token; add it to currentTokens

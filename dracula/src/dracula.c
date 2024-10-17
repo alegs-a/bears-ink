@@ -232,11 +232,10 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         k_msleep(100);
     }
     k_msleep(100); // Debounce
-    printk("Waiting for turn confirmation...");
     for(;;) {
         k_msleep(100);
         if (gpio_pin_get_dt(&button)) {
-            printk(" Button!\n");
+            printk("[Confirm button pressed]\n");
             break;
         }
     }
