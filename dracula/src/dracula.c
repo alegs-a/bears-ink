@@ -126,12 +126,10 @@ void dracula_main() {
 
         //Handle game ending
         if (gamestate.player_health <= 0) {
-            //TODO handle game loss
-            // printf("Dracula wins!");
+            dracula_wins();
             break;
         } else if (gamestate.dracula_health <= 0) {
-            //TODO handle game win
-            // printf("Player's win!");
+            players_win();
             break;
         }
     }
@@ -729,7 +727,6 @@ static void full_dracula_turn(struct GameState *gamestate) {
                     display_clear(0x00);
                     mes_player_bitten(i);
                     display_health(gamestate->player_health, gamestate->dracula_health);
-                    k_msleep(3000);
                     break;
                 }               
             }
