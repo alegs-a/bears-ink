@@ -423,11 +423,7 @@ requires:
 
 ## 10. Privacy and Ethical considerations
 
-TODO:
-- Accessibility
-  - Language use in display
-  - Buzzer
-  - LED colours
+### 10.1 Data Security and Privacy
 
 On the side of data security and privacy, the only user data collected by the
 game board is the specific moves everyone makes in the context of a game. This
@@ -444,7 +440,23 @@ writer (for example, a smartphone app). See the code that reads tokens in
 Since the tokens encode URLs, they can also be scanned by players' phones to
 take them to this repository. This is facilitated by a static redirect server,
 and players' IP addresses and User Agent strings are shared with this redirect
-server and with GitHub (after the redirect).
+server and with GitHub (after the redirect). Given this process occurs for
+every website they visit, we do not believe this poses any additional risk to
+users.
+
+### 10.2 Ethics
+
+An ethical product should be as accessible as possible. This game aims to be as
+accessible as possible in a few ways:
+- **Avoidance of text:** The game avoids communicating important information by
+  text as much as possible, to make it accessible to players of varying literacy.
+  This includes (for example) younger players.
+- **Multi-sensory feedback:** The game provides both visual and auditory feedback
+  for player actions, increasing accessibility for players of low vision and
+  hearing. The game's core interactions were also designed to avoid the need to
+  see small details.
+- **Colour palette:** The game's colour palette was selected to be visually 
+  distinctive to players with all three types of colourblindness.
 
 ## 11. Issues
 
