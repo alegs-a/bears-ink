@@ -75,12 +75,11 @@ static void full_players_turn(struct GameState *gamestate);
  * @brief Runs the game.
  */
 void dracula_main() {
+    // Initialise the button
     if (!gpio_is_ready_dt(&button)) {
         printk("pushbutton not ready\n");
     }
-
     int error = gpio_pin_configure_dt(&button, GPIO_INPUT);
-
     if (error) {
         printk("gpio pin configure fail\n");
     }
@@ -159,7 +158,8 @@ static bool is_adjacent(enum RoomName src, enum RoomName dst) {
 }
 
 /**
- * @brief Check if a given token provides a valid action.
+ * @brief Check if a given token placed on a specific RFID provides a valid 
+ *        action.
  * 
  * @param token The token that will be checked.
  * 
@@ -173,8 +173,10 @@ bool token_valid(struct Token token) {
 
     if (!gamestate.player_resting) {
         if (token.room == NUM_ROOMS) {
+            // Token is on resource gain
             valid = false;
         } else if (token.kind == Garlic) {
+            // Check if garlic token is valid
             if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
                 gamestate.player_positions.rooms[player]->room != room) {
                 valid = false;
@@ -182,6 +184,7 @@ bool token_valid(struct Token token) {
                 valid = false;
             }
         } else if (token.kind == Sunlight) {
+            // Check if sunlight token is valid
             if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room)  &&
                     gamestate.player_positions.rooms[player]->room != room) {
                 valid = false;
@@ -189,6 +192,7 @@ bool token_valid(struct Token token) {
                 valid = false;
             }
         } else if (token.kind == HolyWater) {
+            // Check if water token is valid
             if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
                     gamestate.player_positions.rooms[player]->room != room) {
                 valid = false;
@@ -199,14 +203,17 @@ bool token_valid(struct Token token) {
                 (token.kind == Player2 && player == 1) ||
                 (token.kind == Player3 && player == 2) ||
                 (token.kind == Player4 && player == 3) ) {
+            // Check if player token (movement) is valid
             if (!is_adjacent(gamestate.player_positions.rooms[player]->room, room) &&
                     gamestate.player_positions.rooms[player]->room != room) {
                 valid = false;
             }
         } else {
+            // Invalid token
             valid = false;
         }
     } else {
+        // If resting, only water and sunlight can be put on gain resource reader
         valid = (token.room == NUM_ROOMS && (token.kind == HolyWater || token.kind == Sunlight));
     }
 
@@ -236,9 +243,11 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
         }
     }
 
+    // Read tokens from readers
     struct Token tokens[MAX_TOKENS];
     int token_count = rfid_get_tokens(tokens);
 
+    // Convert tokens to actions the game can read
     k_mutex_lock(&gamestateMutex, K_FOREVER);
     bool error = false;
     int action_val = -1;
@@ -249,6 +258,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             (tokens[i].kind == Player3 && player == 2) ||
             (tokens[i].kind == Player4 && player == 3)) {
             if (gamestate->player_positions.rooms[player]->room != tokens[i].room) {
+                // Create an error if an action has be done already
                 if (action_val != -1) {
                     error = true;
                     break;
@@ -258,6 +268,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             }
         }
         else if (tokens[i].kind == Sunlight) {
+            // Create an error if an action has be done already
             if (action_val != -1) {
                 error = true;
                 break;
@@ -266,6 +277,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             room_val = tokens[i].room;
         }
         else if (tokens[i].kind == HolyWater) {
+            // Create an error if an action has be done already
             if (action_val != -1) {
                 error = true;
                 break;
@@ -274,6 +286,7 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             room_val = tokens[i].room;
         }
         else if (tokens[i].kind == Garlic) {
+            // Create an error if an action has be done already
             if (action_val != -1) {
                 error = true;
                 break;
@@ -282,9 +295,13 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             room_val = tokens[i].room;
         }
     }
+
+    // The player chose to end their turn
     if (action_val == -1) {
         action_val = END;
     }
+
+    // Display an error if there is an error
     if (error) {
         display_clear(0x00);
         err_too_many_actions();
@@ -363,11 +380,12 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
             }
         }
 
+        // Read tokens from readerss
         k_mutex_lock(&gamestateMutex, K_FOREVER);
         struct Token tokens[MAX_TOKENS];
         int token_count = rfid_get_tokens(tokens);
 
-        // Retrieve 
+        // Read resources from the token
         enum Action resource_val = ACTION_ERROR;
         for (int i = 0; i < token_count; i++) {
             if (tokens[i].room == NUM_ROOMS) {
@@ -379,6 +397,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
             }
         }
 
+        // Add the resource to the current player
         if (resource_val == WATER) {
             if (gamestate->players[player].num_water < MAX_WATER) {
                 gamestate->players[player].num_water++;
@@ -420,6 +439,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
 static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
 
+    // Check if action is valid
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -434,6 +454,7 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
         return false;
     }
 
+    // Display if Dracula is there
     if (dracula_is_present(&rooms[room])) {
         gamestate->dracula_health--;
         gamestate->can_bite = false;
@@ -445,6 +466,8 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
         mes_no_dracula();
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
+
+    // Update game state
     update_water_led(player, gamestate->players[player].num_water, true);
     gamestate->players[player].num_water--;
     k_mutex_unlock(&gamestateMutex);
@@ -465,6 +488,8 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
  */
 static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+
+    // Check if action is valid
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
                 gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -479,6 +504,7 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
         return false;
     }
 
+    // Display if Dracula is there
     if (dracula_is_present(&rooms[room])) {
         display_clear(0x00);
         mes_dracula();
@@ -488,6 +514,8 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
         mes_no_dracula();
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
+
+    // Update game state
     add_with_duplicate(&(gamestate->sunlights_from), gamestate->player_positions.rooms[player]);
     add_with_duplicate(&(gamestate->sunlights_to), &rooms[room]);
     update_light_led(player, gamestate->players[player].num_light, true);
@@ -511,6 +539,8 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
  */
 static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+
+    // Check if action is valid
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -525,6 +555,7 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
         return false;
     }
 
+    // Display if Dracula is there
     if (dracula_is_present(&rooms[room])) {
         display_clear(0x00);
         mes_dracula();
@@ -534,6 +565,8 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
         mes_no_dracula();
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
+
+    // Update game state
     gamestate->garlic--;
     k_mutex_unlock(&gamestateMutex);
     return true;
@@ -553,6 +586,8 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
  */
 static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomName room, bool already_moved) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+
+    // Check if action is valid
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room)) {
         display_clear(0x00);
         err_not_adjacent();
@@ -565,6 +600,8 @@ static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomNa
         display_health(gamestate->player_health, gamestate->dracula_health);
         return false;
     }
+
+    // Update game state
     gamestate->player_positions.rooms[player] = &rooms[room];
     k_mutex_unlock(&gamestateMutex);
     return true;
@@ -582,6 +619,8 @@ static bool player_move(uint8_t player, struct GameState *gamestate, enum RoomNa
  */
 static void player_turn(uint8_t player, struct GameState *gamestate) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+
+    // Initialise player turn
      if (!gamestate->players[player].can_bite) {
         gamestate->players[player].can_bite = true;
     }
@@ -597,6 +636,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
 
     bool player_moved = false;
     bool garlic_thrown = false;
+    // Repeat actions until the turn ends
     for (;;) {
         struct Turn turn = player_input(player, gamestate);
         if (turn.action == ACTION_ERROR) { 
@@ -636,15 +676,17 @@ static void full_players_turn(struct GameState *gamestate) {
     gamestate->garlic = MAX_GARLIC;
     gamestate->can_bite_player_positions.length = 0;
     for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
+        // Run player turn
         gamestate->cur_player = i;
         k_mutex_unlock(&gamestateMutex);
-
         player_turn(i, gamestate);
-
         k_mutex_lock(&gamestateMutex, K_FOREVER);
+
+        // Update game state
         if (gamestate->players[i].can_bite) {
             add_with_duplicate(&(gamestate->can_bite_player_positions), gamestate->player_positions.rooms[i]);
         }
+
         // Checks if the game is over
         if (gamestate->dracula_health <= 0) {
             break;
@@ -671,6 +713,7 @@ static void full_dracula_turn(struct GameState *gamestate) {
         for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
             for (uint8_t j = 0; j < bites.length; j++) {
                 if (gamestate->player_positions.rooms[i]->room == bites.rooms[j]->room) {
+                    // Player takes damage
                     gamestate->players[i].turn_skipped = true;
                     if (gamestate->player_health > 0) { 
                         gamestate->player_health--;
@@ -682,6 +725,7 @@ static void full_dracula_turn(struct GameState *gamestate) {
                         gamestate->players[i].num_water--;   
                     }
 
+                    // Draw which player has been bitten
                     display_clear(0x00);
                     mes_player_bitten(i);
                     display_health(gamestate->player_health, gamestate->dracula_health);
@@ -691,6 +735,7 @@ static void full_dracula_turn(struct GameState *gamestate) {
             }
         }
     }    
+    // Update game state
     gamestate->can_bite = true; 
     gamestate->sunlights_from.length = 0;
     gamestate->sunlights_to.length = 0;
