@@ -3,6 +3,7 @@
 #include "room.h"
 #include "rfid.h"
 #include "ui.h"
+#include "led.h"
 
 #include <zephyr/kernel.h>
 #include <zephyr/sys/mutex.h>
@@ -290,6 +291,40 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
 } 
 
 /**
+ * @brief Updates the sunligh count on the LED strip.
+ * 
+ * @param player The current player index.
+ * @param num The number of sunlights the player has.
+ * @param remove True if the LED is to be turned off.
+ */
+static void update_light_led(uint8_t player, uint8_t num, bool remove) {
+    uint8_t i = player * (MAX_LIGHT + MAX_WATER) + num - 1;
+    if (remove) {
+        led_write(i, 0, 0, 0);
+    } else {
+        led_write(i, 255, 255, 0);
+    }
+    led_update();
+}
+
+/**
+ * @brief Updates the holy water count on the LED strip.
+ * 
+ * @param player The current player index.
+ * @param num The number of holy waters the player has.
+ * @param remove True if the LED is to be turned off.
+ */
+static void update_water_led(uint8_t player, uint8_t num, bool remove) {
+    uint8_t idx = player * (MAX_LIGHT + MAX_WATER) + MAX_LIGHT + num - 1;
+    if (remove) {
+        led_write(idx, 0, 0, 0);
+    } else {
+        led_write(idx, 0, 0, 255);
+    }
+    led_update();
+}
+
+/**
  * @brief Handles the rest action of the current player. 
  * 
  * This action involves the player gaining a resource of their choice.
@@ -322,6 +357,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         struct Token tokens[MAX_TOKENS];
         int token_count = rfid_get_tokens(tokens);
 
+        // Retrieve 
         enum Action resource_val = ACTION_ERROR;
         for (int i = 0; i < token_count; i++) {
             if (tokens[i].room == NUM_ROOMS) {
@@ -336,6 +372,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         if (resource_val == WATER) {
             if (gamestate->players[player].num_water < MAX_WATER) {
                 gamestate->players[player].num_water++;
+                update_water_led(player, gamestate->players[player].num_water, false);
             }
             gamestate->player_resting = true;
             k_mutex_unlock(&gamestateMutex);
@@ -343,6 +380,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         } else if (resource_val == LIGHT) {
             if (gamestate->players[player].num_light < MAX_LIGHT) {
                 gamestate->players[player].num_light++;
+                update_light_led(player, gamestate->players[player].num_light, false);
             }
             gamestate->player_resting = true;
             k_mutex_unlock(&gamestateMutex);
@@ -371,6 +409,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
  */
 static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomName room) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
+
     if (!is_adjacent(gamestate->player_positions.rooms[player]->room, room) &&
             gamestate->player_positions.rooms[player]->room != room) {
         display_clear(0x00);
@@ -396,6 +435,7 @@ static bool throw_water(uint8_t player, struct GameState *gamestate, enum RoomNa
         mes_no_dracula();
         display_health(gamestate->player_health, gamestate->dracula_health);
     }
+    update_water_led(player, gamestate->players[player].num_water, true);
     gamestate->players[player].num_water--;
     k_mutex_unlock(&gamestateMutex);
     return true;
@@ -440,6 +480,7 @@ static bool create_light(uint8_t player, struct GameState *gamestate, enum RoomN
     }
     add_with_duplicate(&(gamestate->sunlights_from), gamestate->player_positions.rooms[player]);
     add_with_duplicate(&(gamestate->sunlights_to), &rooms[room]);
+    update_light_led(player, gamestate->players[player].num_light, true);
     gamestate->players[player].num_light--;
     k_mutex_unlock(&gamestateMutex);
     return true;
@@ -627,6 +668,7 @@ static void full_dracula_turn(struct GameState *gamestate) {
 
                     // Players lose one water per bite
                     if (gamestate->players[i].num_water > 0) {
+                        update_water_led(i, gamestate->players[i].num_water, true);
                         gamestate->players[i].num_water--;   
                     }
 
