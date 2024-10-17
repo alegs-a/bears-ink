@@ -170,7 +170,7 @@ bool token_valid(struct Token token) {
     bool valid = true;
 
     if (!gamestate.player_resting) {
-        if (token.room == NUM_ROOMS) {
+        if (token.room == RESOURCE_REQUEST) {
             // Token is on resource gain
             valid = false;
         } else if (token.kind == Garlic) {
@@ -212,7 +212,7 @@ bool token_valid(struct Token token) {
         }
     } else {
         // If resting, only water and sunlight can be put on gain resource reader
-        valid = (token.room == NUM_ROOMS && (token.kind == HolyWater || token.kind == Sunlight));
+        valid = (token.room == RESOURCE_REQUEST && (token.kind == HolyWater || token.kind == Sunlight));
     }
 
     k_mutex_unlock(&gamestateMutex);
@@ -385,7 +385,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         // Read resources from the token
         enum Action resource_val = ACTION_ERROR;
         for (int i = 0; i < token_count; i++) {
-            if (tokens[i].room == NUM_ROOMS) {
+            if (tokens[i].room == RESOURCE_REQUEST) {
                 if (tokens[i].kind == HolyWater) {
                     resource_val = WATER;
                 } else if (tokens[i].kind == Sunlight) {
