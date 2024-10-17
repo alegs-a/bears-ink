@@ -110,6 +110,16 @@ void dracula_main() {
         {&rooms[NHALL], &rooms[GUARDEDWAY], &rooms[CELLAR], &rooms[PASSAGE]}[0]};
     k_mutex_unlock(&gamestateMutex);
 
+    //Initialise LED resource count
+    for (uint8_t i = 0; i < NUM_PLAYERS) {
+        for (uint8_t j = 0; j < MAX_LIGHT) {
+            uint8_t idx = i * (MAX_LIGHT + MAX_WATER) + j;
+            led_write(idx, 255, 255, 0);
+            led_write(idx + MAX_LIGHT, 0, 255, 255);
+        }
+    }
+    led_update();
+
     // Main Game Loop
     for (;;) {
         full_players_turn(&gamestate);
