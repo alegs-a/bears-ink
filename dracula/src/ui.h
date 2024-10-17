@@ -26,6 +26,9 @@ void err_already_moved();
 void err_not_your_turn(int player);
 void err_invalid_resource();
 
+void players_win();
+void dracula_wins();
+
 void display_health(int player_lives, int dracula_lives);
 
 
