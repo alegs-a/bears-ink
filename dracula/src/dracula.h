@@ -39,7 +39,9 @@ enum Action {
  * @brief Stores a single turn action.
  */
 struct Turn {
+    // The action type
     enum Action action;
+    // The target room of the action
     enum RoomName room_name;
 };
 
@@ -47,15 +49,32 @@ struct Turn {
  * @brief Information that is unique to each player.
  */
 struct Player {
+    // Remaining number of holy water
     uint8_t num_water;
+    // Remaining number of sunlights
     uint8_t num_light;
+    // True if the player has just been bitten
     bool turn_skipped;
+    // True if the player can be bitten
     bool can_bite;
 };
 
+// Game rooms and connections
 extern Room rooms[NUM_ROOMS];
 
+/**
+ * @brief Runs the game.
+ */
 void dracula_main(void);
+
+/**
+ * @brief Check if a given token placed on a specific RFID provides a valid 
+ *        action.
+ * 
+ * @param token The token that will be checked.
+ * 
+ * @returns True if the action is valid, false otherwise.
+ */
 bool token_valid(struct Token token);
 
 #endif // DRACULA_H
