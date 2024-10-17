@@ -1,0 +1,28 @@
+Week: 12
+Date: 18/10/24
+
+Completed Tasks:
+- Blacked out and assembled the board
+- Explainer video
+- Team documentation
+- Board assembly
+- LEDs integrated with game logic
+- Debugging hardware-level problems
+- Wrote the LED driver
+- Powering the RFID readers!!!
+
+Current Focus:
+- Put all that in there (Alex)
+- Hunting down some bugs in the Dracula AI state updating
+- Testing game logic
+- Making the demo playable
+
+Upcoming Tasks:
+- Make it not be bad for the demo
+- Fix the bugs in the Dracula AI state updating
+- Might be able to reattach the display (if the power issues can be fixed enough)
+
+Challenges/Roadblocks:
+- Tired
+- Poor writing skills
+- Thesis
