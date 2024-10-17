@@ -111,8 +111,8 @@ void dracula_main() {
     k_mutex_unlock(&gamestateMutex);
 
     //Initialise LED resource count
-    for (uint8_t i = 0; i < NUM_PLAYERS) {
-        for (uint8_t j = 0; j < MAX_LIGHT) {
+    for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
+        for (uint8_t j = 0; j < MAX_LIGHT; j++) {
             uint8_t idx = i * (MAX_LIGHT + MAX_WATER) + j;
             led_write(idx, 255, 255, 0);
             led_write(idx + MAX_LIGHT, 0, 255, 255);
