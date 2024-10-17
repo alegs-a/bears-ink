@@ -425,8 +425,8 @@ requires:
 
 ### 10.1 Data Security and Privacy
 
-On the side of data security and privacy, the only user data collected by the
-game board is the specific moves everyone makes in the context of a game. This
+The only user data collected by the
+game board is the specific moves made by players in the context of a game. This
 data is not personally-identifying information, and is stored exclusively in
 volatile memory, so is erased when the power switch is flipped off.
 
