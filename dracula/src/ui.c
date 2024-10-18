@@ -516,13 +516,13 @@ void err_already_moved()
 
 void err_not_your_turn(int player)
 {
-    printk("\nPlayer %d's turn!\n", player);
+    printk("\nPlayer %d's turn!\n", player + 1);
     switch (player)
     {
-        case 1: display_string(p1, 70, 1); break;
-        case 2: display_string(p2, 70, 1); break;
-        case 3: display_string(p3, 70, 1); break;
-        case 4: display_string(p4, 70, 1); break;
+        case 0: display_string(p1, 70, 1); break;
+        case 1: display_string(p2, 70, 1); break;
+        case 2: display_string(p3, 70, 1); break;
+        case 3: display_string(p4, 70, 1); break;
     }
 
     display_string(g2, 74, 3);
@@ -539,13 +539,13 @@ void err_invalid_resource()
 
 void mes_player_bitten(int player)
 {
-    printk("Player %d has been bitten!!\n", player);
+    printk("Player %d has been bitten!!\n", player + 1);
     switch (player)
     {
-        case 1: display_string(p1, 70, 1); break;
-        case 2: display_string(p2, 70, 1); break;
-        case 3: display_string(p3, 70, 1); break;
-        case 4: display_string(p4, 70, 1); break;
+        case 0: display_string(p1, 70, 1); break;
+        case 1: display_string(p2, 70, 1); break;
+        case 2: display_string(p3, 70, 1); break;
+        case 3: display_string(p4, 70, 1); break;
     }
 
     display_string(i2, 70, 3);
@@ -616,5 +616,5 @@ void ui_splash()
     printk("| |_| | | | (_| | (__| |_| | | (_| |_|\n");
     printk("|____/|_|  \\__,_|\\___|\\__,_|_|\\__,_(_)\n");
     display_image(&image_dracula, 20, 2);
-    k_msleep(10000);
+    // k_msleep(10000);
 }

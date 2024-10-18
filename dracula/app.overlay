@@ -45,28 +45,28 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "NHALL";
+				bearsink,room = "LIBRARY";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "TOMB";
+				bearsink,room = "PASSAGE";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
 				status = "okay";
-				bearsink,room = "GUARDEDWAY";
+				bearsink,room = "CHAPEL";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
 				status = "okay";
-				bearsink,room = "GALLERY";
+				bearsink,room = "NEST";
 			};
 		};
 
@@ -81,28 +81,28 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "ALLEY";
+				bearsink,room = "BONEPIT";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "BONEPIT";
+				bearsink,room = "NHALL";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
 				status = "okay";
-				bearsink,room = "ENTRANCE";
+				bearsink,room = "TOMB";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
 				status = "okay";
-				bearsink,room = "VENT";
+				bearsink,room = "GUARDEDWAY";
 			};
 		};
 
@@ -117,28 +117,28 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "DUNGEON";
+				bearsink,room = "CRYPT";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "DINING";
+				bearsink,room = "SHALL";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
 				status = "okay";
-				bearsink,room = "LIBRARY";
+				bearsink,room = "CANAL";
 			};
 
 			rfid@2f {
 				compatible = "nxp,mfrc522";
 				reg = <0x2f>;
 				status = "okay";
-				bearsink,room = "CRYPT";
+				bearsink,room = "BATHROOM";
 			};
 		};
 
@@ -154,21 +154,28 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "PASSAGE";
+				bearsink,room = "RESOURCE_REQUEST";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "CHAPEL";
+				bearsink,room = "DINING";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
 				status = "okay";
-				bearsink,room = "NEST";
+				bearsink,room = "GALLERY";
+			};
+
+			rfid@2f {
+				compatible = "nxp,mfrc522";
+				reg = <0x2f>;
+				status = "okay";
+				bearsink,room = "BALLROOM";
 			};
 		};
 
@@ -183,14 +190,14 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "BATHROOM";
+				bearsink,room = "ENTRANCE";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "CANAL";
+				bearsink,room = "CELLAR";
 			};
 
 			rfid@2e {
@@ -212,28 +219,21 @@
 				compatible = "nxp,mfrc522";
 				reg = <0x2c>;
 				status = "okay";
-				bearsink,room = "CELLAR";
+				bearsink,room = "VENT";
 			};
 
 			rfid@2d {
 				compatible = "nxp,mfrc522";
 				reg = <0x2d>;
 				status = "okay";
-				bearsink,room = "SHALL";
+				bearsink,room = "DUNGEON";
 			};
 
 			rfid@2e {
 				compatible = "nxp,mfrc522";
 				reg = <0x2e>;
 				status = "okay";
-				bearsink,room = "BALLROOM";
-			};
-
-			rfid@2f {
-				compatible = "nxp,mfrc522";
-				reg = <0x2f>;
-				status = "okay";
-				bearsink,room = "RESOURCE_REQUEST";
+				bearsink,room = "ALLEY";
 			};
 		};
 	};
