@@ -514,7 +514,10 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
             }
             return;
         }
-        if (turn_over) continue;
+        if (turn_over) {
+            printf("Too many actions\n");
+            continue;
+        }
         if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) turn_over = true;
         if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) turn_over = true;
         if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) garlic_thrown = true;

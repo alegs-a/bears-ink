@@ -2,6 +2,7 @@
 #include "room.h"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <time.h>
 
 // #define DEBUG
 
@@ -42,6 +43,7 @@ void dracula_setup(void) {
     dracula_rooms[0] = &rooms[DUNGEON];
     dracula_state.length = 1;
     dracula_state.rooms = dracula_rooms;
+    srand(time(NULL));
 }
 
 
@@ -205,8 +207,9 @@ static void best_bite(
     // remove the rooms which are adjacent to some player
     Room **adj_buf = malloc(MAX_ADJ * sizeof(Room*));
     struct RoomBuffer unsafe; unsafe.rooms = adj_buf;
-    for (int i = 0; i < st->player_positions.length; i++) {
-        unsafe.rooms[0] = st->player_positions.rooms[i];
+    // TODO: this makes the state correct, but ignores players who cannot be bitten
+    for (int i = 0; i < player_positions.length; i++) {
+        unsafe.rooms[0] = player_positions.rooms[i];
         unsafe.length = 1;
         walk_ends(EMPTY_BUFFER, 1, &unsafe);
         for (int j = 0; j < unsafe.length; j++) {
@@ -358,7 +361,7 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     Room **ending = malloc(sizeof(Room*) * NUM_ROOMS);
     struct RoomBuffer ending_distribution;
     ending_distribution.rooms = ending;
-    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution); // BUG: ignores sunlights
+    bool can_bite = bite(num_moves, st, &bite_score, bites, &ending_distribution);
 
     if (!can_bite || bite_score > bite_roll || !(st->can_bite)) { // no bite
         // update Dracula's state
@@ -367,10 +370,13 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
         concat_no_duplicate(&innacc, st->can_bite_player_positions);
         walk_ends(innacc, num_moves, &dracula_state);
         free(innacc_buf);
+        bites->length = 0;
     } else { // BITE!
         remove_duplicate_rooms(bites);
         room_buffer_copy(&dracula_state, ending_distribution);
         // Edge case for if we do the bite, but there are NO safe rooms
+        // NOTE: At the moment, this is dead code. However, in an implementation
+        // where we don't take any shortcuts, it is necessary.
         if (dracula_state.length == 0) {
             add_with_duplicate(&dracula_state, bites->rooms[bites->length - 1]);
         }
@@ -409,6 +415,10 @@ bool dracula_is_present(Room *room) {
     }
 
     remove_if_present(&dracula_state, room);
+
+    #ifdef DEBUG
+    print_room_buffer(dracula_state);
+    #endif
 
     return false;
 }
