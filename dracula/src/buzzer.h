@@ -8,6 +8,7 @@
 #define BUZZER_THREAD_PRIORITY 9
 
 enum BuzzKind {
+    STARTUP,
     READ_OK,
     READ_ERROR,
 };

@@ -1,5 +1,7 @@
 #include "display.h"
+#include "rfid.h"
 
+#include <zephyr/irq.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/spi.h>
@@ -106,6 +108,11 @@ K_FIFO_DEFINE(display_queue);
  */
 int display_send(uint8_t *bytes, int length)
 {
+    // We discovered the STM32 cannot drive the I2C1 bus and the SPI1 bus
+    // simultaneously, and don't have enough time to reimplement this driver
+    // using the I2C api
+    return 0;
+
     struct spi_buf buffer = {
         .buf = bytes,
         .len = length
@@ -225,7 +232,7 @@ int display_init()
         COMMAND_SET_SCAN_DESCENDING,
         COMMAND_DEFAULT_START_LINE,
         COMMAND_ADDRESS_MODE, ADDRESS_MODE_HORISONTAL,
-        COMMAND_SET_CONTRAST, 255,
+        COMMAND_SET_CONTRAST, 127,
         COMMAND_DISPLAY_ON,
         COMMAND_SET_INVERSION_NORMAL,
         COMMAND_DEACTIVATE_SCROLL,

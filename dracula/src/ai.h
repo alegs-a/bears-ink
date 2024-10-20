@@ -30,13 +30,18 @@
 ///                                                                         ///
 ///////////////////////////////////////////////////////////////////////////////
 
-// NOTE: have updated this to have two separate buffers for player positions
 struct GameState {
+    // A buffer of players
     struct Player *players;
+    // The remaining player health
     int8_t player_health;
+    // The remaning number of garlics
     uint8_t garlic;
+    // True if the current player is resting
     bool player_resting;
+    // The current player index
     uint8_t cur_player;
+    // The remaining Dracula health
     int8_t dracula_health;
     // Rooms that all of the players are in. If two players are in the same
     // room, include that room twice. (that is, counted with mulitplicity)

@@ -1,36 +1,92 @@
 
-## Dracula
+
+Table of Contents:
+1. [Introduction](#1-introduction)
+2. [Rules](#2-rules)
+    1. [Setup](#21-setup)
+    2. [Gameplay](#22-gameplay)
+    3. [Items](#23-items)
+    4. [Dracula's Turn](#24-draculas-turn)
+    5. [Game End](#25-game-end)
+3. [Development Environment](#3-development-environment)
+4. [Building & Flashing](#4-building--flashing)
+5. [Hardware & BOM](#5-hardware--bom)
+6. [Connecting the Board](#6-connecting-the-board)
+7. [Project Overview](#7-project-overview)
+8. [Repository Structure](#8-repository-structure)
+9. [Using the Display](#9-using-the-display)
+10. [Privacy and Ethical considerations](#10-privacy-and-ethical-considerations)
+11. [Issues](#11-issues)
+12. [Additional Resources](#11-additional-resources)
+
+## 1. Introduction
 
 Welcome to the core repository of dracula, an interactive and collaborative
-technology enhanced board game of hidden information. In Dracula, players must
-race to track down and stake Dracula before they are all eliminated. On each
+technology enhanced board game of hidden information. In Dracula, players
+race to track down and defeat Dracula before they are all bitten. On each
 turn, a player can move to a new room on a castle board, cast light to block
-Dracula from moving, throw garlic to detect him, and throw stakes to attack him.
-Each board game piece is RFID tagged to be read by RFID readers in the board.
-After all players turns, the game's computer uses the RFID information to
+Dracula from moving, throw garlic to detect him, and throw holy water to attack
+him. Each board game piece is RFID tagged to be read by RFID readers in the
+board. After all players turns, the game's computer uses the RFID information to
 automate Dracula's actions and display game information to the players using an
-LCD screen and LEDs, that provides an engaging user experience. Will the players
+LCD screen and LEDs, to provide an engaging user experience. Will the players
 be able to take down Dracula in time?
-
-The full rules are [here](docs/rules.md).
-
-Contents:
-1. [Dracula](#Dracula)
-2. [Development Environment](#2-development-environment)
-3. [Building & Flashing](#3-building--flashing)
-4. [Hardware & BOM](#4-hardware--bom)
-5. [Connecting the Board](#5-connecting-the-board)
-6. [Project Overview](#6-project-overview)
-7. [Repository Structure](#7-repository-structure)
-8. [Using the Display](#8-using-the-display)
-9. [Privacy and Ethical considerations](#9-privacy-and-ethical-considerations)
-10. [Additional Resources](#10-additional-resources)
-11. [Issues](#11-issues)
 
 The majority of our original work can be found in the `dracula/src` directory
 (see [Repository Structure](#7-repository-structure)).
 
-## 2. Development Environment
+## 2. Rules
+
+### 2.1 Setup
+
+The setup is as follows:
+1. The four player meeples are placed in the corner rooms of the board.
+2. The Dracula meeple is placed in the dungeon.
+3. Each player receives one Sunshine token and one Holy Water token, as seen in the table below.
+
+The players start with 5 lives shared among them, and Dracula has 3.
+
+### 2.2 Gameplay
+
+Beginning with an arbitrary player, on each players turn they may choose to take any of the following actions, in any order:
+
+1. Move to an adjacent room (at most once).
+2. Throw a garlic into a room (at most 4 times, or the number of garlics remaining that round).
+3. Cast Sunshine in a Bottle, ending the players turn.
+4. Throwing holy water into a room, ending the players turn.
+
+A player may also choose to take *no* actions and receive an extra item (Sunshine or Holy Water) of their choosing. A player's turn is over when they press the confirm turn button.
+
+### 2.3 Items
+
+Items can be used in the player's current room, or any adjacent room .To use an
+item, place it on the reader in the desired room. The item may be left there
+until the end of the round, or moved to make space for a new token.
+
+| Item                 | Finite                       | Description                                                                                                                                                                                                                                                                            |
+| -------------------- | ---------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Garlic               | Four per round (any players) | When placed on a room the player is in or adjacent to, checks if dracula is in the room.                                                                                                                                                                                                                      |
+| Sunshine in a Bottle | Yes                          | Illuminates a room with bright sunlight until the end of Dracula's turn. If a room becomes illuminated Dracula must immediately leave the room, and cannot enter again until after his turn. He must leave through a doorway other than the one that the sunshine was thrown through. |
+| Holy water           | Yes                          | If holy water is thrown into a room with Dracula in it, he takes 1 point of damage.                                                                                                                                                                                        |
+
+### 2.4 Dracula's Turn
+
+Dracula takes his turn after all four player turns have finished. He can move up
+to *three* rooms in one turn. If - at any point during his turn - he is in the
+same room as a player he may bite that player, causing the player team to lose a
+life and the bitten player to lose their next turn. Fortunately, Dracula doesn't
+like spoiled food, so he'll wait at least one turn to bite a player for a second
+time. He may bite as many players as he likes in a single turn.
+
+If Dracula was hit by holy water during a player's turn he may still move, but
+cannot bite until the end of the round.
+
+### 2.5 Game End
+
+The player team wins if Dracula runs out of lives. Dracula wins if he bites the
+players a total of five times.
+
+## 3. Development Environment
 
 Only windows and linux are supported (not apple architecture).
 
@@ -85,7 +141,7 @@ corresponding [/.devcontainer/dockerfile](/.devcontainer/dockerfile), and may
 take up to 30 minutes to complete depending on download speed. Once completed,
 the folder will reopen in the development environment.
 
-## 3. Building & Flashing
+## 4. Building & Flashing
 
 This project is built using the
 [Zephyr](https://docs.zephyrproject.org/latest/index.html) real time operating
@@ -105,7 +161,7 @@ from the drop down list.
 - To clean the build, run the `"Clean"` task.
 - To flash a built project to the microcontroller, run the `"Flash"` task.
 
-## 4. Hardware & BOM
+## 5. Hardware & BOM
 
 The full bill of materials for the electronics is as follows:
 
@@ -130,14 +186,14 @@ The full bill of materials for the electronics is as follows:
 | Male-Female Jumpers                      | [Jumper Wire 20cm Ribbon M/F](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                           | 1   | [3.95$ (Core Electronics)](https://core-electronics.com.au/male-female-jumper-wire-40-20cm.html)                                                        | 3.95$      |
 | Male-Male Jumpers                        | [Male to Male Jumper Wires](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)            | 1   | [7.30$ (Core Electronics)](https://core-electronics.com.au/professional-male-to-male-jumper-wires-40-x-20cm.html)                                       | 7.30$      |
 | Male Headers                             | [Male Headers 2.56mm](https://core-electronics.com.au/header-male-pin-01x20.html)                                             | 2   | [0.35$ (Core Electronics)](https://core-electronics.com.au/header-male-pin-01x20.html)                                                                  | 0.70$      |
-| Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 2   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
+| Breadboard                               | [Breadboard - Mini Modular (Red)](https://www.sparkfun.com/products/12044)                                                    | 4   | [2.75$ (Core Electronics)](https://core-electronics.com.au/170-tie-point-mini-red-solderless-breadboard.html)                                           | 5.5$       |
 | Shipping                                 |                                                                                                                               |     |                                                                                                                                                         | 10.20$     |
 | Total Cost                               |                                                                                                                               |     |                                                                                                                                                         | 410.36$    |
 
 The main microcontroller is an [STM32L432KC](https://www.st.com/en/microcontrollers-microprocessors/stm32l432kc.html)
 on the [Nucleo-L432KC](https://www.st.com/en/evaluation-tools/nucleo-l432kc.html) used as the main board for the system.
 
-## 5. Connecting the Board
+## 6. Connecting the Board
 
 The development board pins can be seen below:
 
@@ -148,7 +204,7 @@ The development board pins can be seen below:
 > [!note]
 > The black button opposite the micro USB port is the reset button.
 
-### 5.1 Display
+### 6.1 Display
 
 Connect the following:
 
@@ -162,7 +218,7 @@ Connect the following:
 | Red         | Power            | -    | 3.3V          | Vin       |
 | Black       | Ground           | -    | 0V            | GND       |
 
-### 5.2 Button
+### 6.2 Button
 
 The button is expected to be on this pin:
 
@@ -173,7 +229,7 @@ The button is expected to be on this pin:
 Connect this pin to 3.3V through the button, and to GND through a 10kΩ pull-down
 resistor.
 
-### 5.3 RFID
+### 6.3 RFID
 
 Connect the TCA9548A multiplexer to the board:
 
@@ -270,9 +326,9 @@ Then, in the `rfid@XX` nodes, set the `bearsink,room` property to the room name
 (as in [`enum RoomName`](/dracula/src/room.h) value corresponding to the room
 each reader represents
 
-## 6. Project Overview
+## 7. Project Overview
 
-In Dracula, there five top level components:
+There five top level components:
 - **RFID Sensors** - The driver provides the information about each sensor and
   any tokens placed on top of them. This is implemented at [`rfid.cpp` /
   `rfid.h`](/dracula/src/rfid.cpp). The RFID library at
@@ -291,47 +347,7 @@ In Dracula, there five top level components:
 The entrypoint to the game logic is located at
 [`dracula/src/main.c`](dracula/src/main.c).
 
-```mermaid
----
-Component Architecture:
----
-classDiagram
-  Dracula <|-- AI
-  Dracula <|-- UI
-  UI <|-- Display
-  Dracula <|-- RFID
-  Dracula <|-- Buzzer
-  Dracula <|-- LEDStrip
-  class UI {
-    ui_splash()
-  }
-  class Display {
-    display_write()
-    display_image()
-  }
-  class RFID {
-    rfid_get_tokens()
-  }
-  class Buzzer {
-    buzzer_send()
-  }
-```
-
-```mermaid
----
-title: Game Logic Flow
----
-flowchart LR
-  Initialisation --> P1[Player1]
-  P1 --> A{Errors?}
-  A -->|Yes| P1
-  A -->|No| P2[Player2]
-  P2 --> B{Errors?}
-  B -->|Yes| P2
-  B -->|No| C[IsEnd?]
-```
-
-## 7. Repository Structure
+## 8. Repository Structure
 
 The majority of our original work is contained in the `assets/`, `dracula/`, and
 `prototypes/` directories.
@@ -364,6 +380,7 @@ The majority of our original work is contained in the `assets/`, `dracula/`, and
     - [`ui.c`](/dracula/src/ui.c) / [`ui.h`](/dracula/src/ui.h) - User interface implementation for Dracula including splash screen, game events, and error conditions built on the display driver.
 - [`prototypes`](/prototypes) - Prototypes of AI and game logic, *not* compiled for or sent to the board.
     - [`debug`](/prototypes/debug) - A version of the C game logic that uses the ai and room code that is loaded onto the device, but does IO in the terminal. Useful for debugging the ai.
+    - [`python`](/prototypes/python) - Some python prototyping of the game rules.
     - [`quantum_dracula`](/prototypes/quantum_dracula) - The Haskell prototype of the Quantum Dracula ai.
 - [`scripts`](/scripts)
   - [`build.sh`](/scripts/build.sh) - Builds the source file.
@@ -371,7 +388,7 @@ The majority of our original work is contained in the `assets/`, `dracula/`, and
   - [`convert_png.py`](/scripts/convert_png.py) - Converts PNG files to memory buffers able to be written to the display in code.
   - [`flash.sh`](/scripts/flash.sh) - Flashes the board with the most recent build.
   - [`format.sh`](/scripts/format.sh) - Autoformats source files.
-  - [`jlink_postinit.sh`](/scripts/jlink_postinit.sh) -
+  - [`jlink_postinit.sh`](/scripts/jlink_postinit.sh) - To be run inside the container after running because setup requires advanced privileges, to allow debugging.
   - [`screen.sh`](/scripts/screen.sh) - Connects to the serial port on the development board to monitor system logs.
   - [`source_zephyr.sh`](/scripts/source_zephyr.sh) - Initialises zephyr environment variables from the SDK location.
   - [`usbip_wsl_attach.sh`](/scripts/usbip_wsl_attach.sh) - Automated script to detect and attach the to microcontroller communications.
@@ -380,7 +397,7 @@ The majority of our original work is contained in the `assets/`, `dracula/`, and
 - [`.gitignore`](/.gitignore) - Ignore file for C and python to prevent build files being committed to git.
 - [`README.md`](/README.md) - Project documentation.
 
-## 8. Using the Display
+## 9. Using the Display
 
 The display has 8 rows, each with 128 columns. Each row is 8 pixels tall, and
 each of the 8 bits in a byte written to the display sets the 8 pixel states from
@@ -404,16 +421,12 @@ requires:
 > use up valuable RAM. Instead, each buffer should be defined in it's own
 > function, and therefore retrieved from program memory when required.
 
-## 9. Privacy and Ethical considerations
+## 10. Privacy and Ethical considerations
 
-TODO:
-- Accessibility
-  - Language use in display
-  - Buzzer
-  - LED colours
+### 10.1 Data Security and Privacy
 
-On the side of data security and privacy, the only user data collected by the
-game board is the specific moves everyone makes in the context of a game. This
+The only user data collected by the
+game board is the specific moves made by players in the context of a game. This
 data is not personally-identifying information, and is stored exclusively in
 volatile memory, so is erased when the power switch is flipped off.
 
@@ -427,14 +440,23 @@ writer (for example, a smartphone app). See the code that reads tokens in
 Since the tokens encode URLs, they can also be scanned by players' phones to
 take them to this repository. This is facilitated by a static redirect server,
 and players' IP addresses and User Agent strings are shared with this redirect
-server and with GitHub (after the redirect).
+server and with GitHub (after the redirect). Given this process occurs for
+every website they visit, we do not believe this poses any additional risk to
+users.
 
-## 10. Additional Resources
+### 10.2 Ethics
 
-- Prototypes for the game logic and the AI may be found in
-  [`prototypes`](/prototypes/)
-- [Weekly Notes](/docs/notes/)
-- [Github Wiki](https://github.com/alegs-a/bears-ink/wiki)
+An ethical product should be as accessible as possible. This game aims to be as
+accessible as possible in a few ways:
+- **Avoidance of text:** The game avoids communicating important information by
+  text as much as possible, to make it accessible to players of varying literacy.
+  This includes (for example) younger players.
+- **Multi-sensory feedback:** The game provides both visual and auditory feedback
+  for player actions, increasing accessibility for players of low vision and
+  hearing. The game's core interactions were also designed to avoid the need to
+  see small details.
+- **Colour palette:** The game's colour palette was selected to be visually 
+  distinctive to players with all three types of colourblindness.
 
 ## 11. Issues
 
@@ -442,3 +464,10 @@ The following are issues that we are currently aware of:
 
 - If players want to end their turn after moving and without using a resource,
   they have to press the end turn button twice.
+
+## 12. Additional Resources
+
+- Prototypes for the game logic and the AI may be found in
+  [`prototypes`](/prototypes/)
+- [Weekly Notes](/docs/notes/)
+- [Github Wiki](https://github.com/alegs-a/bears-ink/wiki)
