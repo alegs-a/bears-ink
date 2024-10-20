@@ -503,18 +503,20 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
 
     bool player_moved = false;
     bool garlic_thrown = false;
+    bool turn_over = false;
     for (;;) {
         struct Turn turn = player_input(player, gamestate);
         if (turn.action == ACTION_ERROR) continue;
         if (turn.action == END) {
             // Rest occurs when no action has been done
-            if (!player_moved && !garlic_thrown) { 
+            if (!player_moved && !garlic_thrown && !turn_over) { 
                 player_rest(player, gamestate);
             }
             return;
         }
-        if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) return;
-        if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) return;
+        if (turn_over) continue;
+        if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) turn_over = true;
+        if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) turn_over = true;
         if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) garlic_thrown = true;
         if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) player_moved = true;
     }

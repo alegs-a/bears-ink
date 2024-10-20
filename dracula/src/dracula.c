@@ -633,6 +633,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
 
     bool player_moved = false;
     bool garlic_thrown = false;
+    bool turn_over = false;
     // Repeat actions until the turn ends
     for (;;) {
         struct Turn turn = player_input(player, gamestate);
@@ -645,11 +646,17 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
             }
             break;
         }
+        if (turn_over) {
+            display_clear(0x00);
+            err_too_many_actions(); // Will do for now
+            display_health(gamestate->player_health, gamestate->dracula_health);
+            continue;
+        }
         else if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) {
-            break;
+            turn_over = true;
         }
         else if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) {
-            break;
+            turn_over = true;
         }
         else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
             garlic_thrown = true;
