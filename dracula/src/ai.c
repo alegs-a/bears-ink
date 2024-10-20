@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
-#define DEBUG
+// #define DEBUG
 
 #ifndef DEBUG
     #include "dracula.h"
