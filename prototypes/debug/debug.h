@@ -36,6 +36,9 @@ enum Action {
     ACTION_ERROR
 };
 
+extern Room rooms[];
+extern char *room_names[];
+
 /**
  * @brief Stores a single turn action.
  */

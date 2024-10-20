@@ -1,15 +1,16 @@
 #include "ai.h"
 #include "room.h"
-#include "dracula.h"
 #include <stdlib.h>
 #include <stdbool.h>
 
-// #define DEBUG
+#define DEBUG
 
 #ifndef DEBUG
+    #include "dracula.h"
     #include <zephyr/sys/printk.h>
     #define ASSERT(b, err_str) if (!(b)) printk("Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
 #else
+    #include "../../prototypes/debug/debug.h"
     #include <stdio.h>
     #define ASSERT(b, err_str) if (!(b)) fprintf(stderr, "Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
 #endif
@@ -25,30 +26,6 @@ static struct RoomBuffer dracula_state;
 
 
 #ifdef DEBUG
-static char *room_names[] = {
-    "NHALL",
-    "TOMB",
-    "GUARDEDWAY",
-    "GALLERY",
-    "ALLEY",
-    "BONEPIT",
-    "ENTRANCE",
-    "VENT",
-    "DUNGEON",
-    "DINING",
-    "LIBRARY",
-    "CRYPT",
-    "PASSAGE",
-    "CHAPEL",
-    "NEST",
-    "BATHROOM",
-    "CANAL",
-    "STAIRCASE",
-    "CELLAR",
-    "SHALL",
-    "BALLROOM",
-};
-
 static void print_room_buffer(const struct RoomBuffer buf) {
     for (int i = 0; i < buf.length; i++) {
         printf("%s\n", room_names[buf.rooms[i]->room]);

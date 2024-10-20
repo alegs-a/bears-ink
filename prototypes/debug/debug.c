@@ -32,7 +32,7 @@ Room rooms[NUM_ROOMS] = {
     {.room=BALLROOM, .adjacent=&(struct RoomBuffer){.length=3, .rooms=&(Room*[3]){&rooms[DINING], &rooms[GALLERY], &rooms[STAIRCASE]}[0]}}
 };
 
-static char *room_names[] = {
+char *room_names[] = {
     "NHALL",
     "TOMB",
     "GUARDEDWAY",
