@@ -43,7 +43,9 @@ void dracula_setup(void) {
     dracula_rooms[0] = &rooms[DUNGEON];
     dracula_state.length = 1;
     dracula_state.rooms = dracula_rooms;
+    #ifdef DEBUG
     srand(time(NULL));
+    #endif
 }
 
 
@@ -257,6 +259,7 @@ static void best_bite(
  * the standard uniform distribution)
  */
 static inline float std_unif(void) {
+    // TODO: get this bad boy to use hardware randomness
     return (float)rand() / (float)RAND_MAX;
 }
 
