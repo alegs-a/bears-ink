@@ -1,7 +1,7 @@
 {-
  - DETERMININISTIC TESTS FOR QUANTUMDRACULA
  -}
-module Dterministic where
+module Deterministic where
 
 import Game
 import QuantumDracula
@@ -64,7 +64,6 @@ test_shortest = do
                 prop :: [Room] -> Room -> [Room] -> Bool
                 prop inacc room dist = shortest (filter (/= room) inacc) room (room:dist) == 0
             in property prop
-
         it "Shortest path to everything in walkEnds" $ let
                 prop :: [Room] -> NonEmptyList Room -> Bool
                 prop inacc dist = all
@@ -86,3 +85,7 @@ test_shortest = do
         it "Dungeon and Gallery" $ do
             shortest [] Gallery [Dungeon] `shouldBe` 2
             shortest [Alley] Gallery [Dungeon] `shouldBe` 3
+
+
+main :: IO ()
+main = hspec $ test_turnStarts >> test_shortest

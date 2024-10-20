@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+// #define DEBUG
+
 #ifndef DEBUG
     #include <zephyr/sys/printk.h>
     #define ASSERT(b, err_str) if (!(b)) printk("Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
@@ -333,6 +335,9 @@ static bool bite(
                 positions_copy,
                 &bites_copy,
                 &ending_copy);
+
+        // no bites.
+        if (bites_copy.length == 0) continue;
 
         // score for safe rooms to end the turn
         // Don't round the score to 0 here - we want to compare the best way to

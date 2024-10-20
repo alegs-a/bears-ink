@@ -15,6 +15,31 @@ import Data.Function (on)
 import Data.Ord (Down(..))
 
 
+main :: IO ()
+main = do
+    putStrLn "Scenario 1."
+    putStrLn "  Dracula can bite two players (1000 runs)."
+    putStrLn "  Should do it EVERY the time."
+    scenario1 1000 >>= print
+    putStrLn ""
+    
+    putStrLn "Scenario 2."
+    putStrLn "  Total number of bites as aggressiveness increases (1000 runs per aggressiveness level)."
+    scenario2Summary >>= print
+    putStrLn ""
+
+    putStrLn "Scenario 3."
+    putStrLn "  Do the best bite in Scenario 2. Ask if Dracula is present in the Cellar (1000 runs)."
+    putStrLn "  Say no almost all of the time."
+    scenario3 1000 >>= print
+    putStrLn ""
+
+    putStrLn "Scenario 4."
+    putStrLn "  Do the best bite in Scenario 2. Ask if Dracula is present in the South Hallway (1000 runs)."
+    putStrLn "  Say no almost all of the time."
+    scenario4 1000 >>= print
+    putStrLn ""
+
 -- Can bite two players, so always do it
 scenario1 :: Int -> IO [(Room, Int)]
 scenario1 = scenarioResults (draculaTurn st1) dist1
