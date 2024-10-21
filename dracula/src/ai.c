@@ -370,7 +370,8 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
         // update Dracula's state
         Room **innacc_buf = malloc(2*NUM_PLAYERS * sizeof(Room*));
         struct RoomBuffer innacc = room_buffer_from(st->sunlights_to, innacc_buf);
-        concat_no_duplicate(&innacc, st->can_bite_player_positions);
+        // If Dracula is not allowed to bite, he can move through player rooms
+        if (st->can_bite) concat_no_duplicate(&innacc, st->can_bite_player_positions);
         walk_ends(innacc, num_moves, &dracula_state);
         free(innacc_buf);
         bites->length = 0;
@@ -389,8 +390,6 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
     free(ending);
 
     #ifdef DEBUG
-    printf("Player positions\n");
-    print_room_buffer(st->player_positions);
     printf("Dracula state:\n");
     print_room_buffer(dracula_state);
     #endif
@@ -420,6 +419,7 @@ bool dracula_is_present(Room *room) {
     remove_if_present(&dracula_state, room);
 
     #ifdef DEBUG
+    printf("Dracula state:\n");
     print_room_buffer(dracula_state);
     #endif
 
