@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <zephyr/device.h>
+
 // The pin configuration is the following:
 // - Data In (Blue) -> PA_7 (pin A6) configured as SPI1_MOSI
 // - Clock (Yellow) -> PA_1 (pin A1) configured as SPI1_SCK
@@ -25,39 +27,22 @@
 
 
 /**
- * @brief Initialises the display driver.
- * @returns Zero if the display driver initialised successfully.
- */
-int display_init();
-
-/**
- * @brief Make the display sleep.
- */
-void display_sleep();
-
-/**
- * @brief Wake up the display from sleeping.
- */
-void display_wake();
-
-/**
  * @brief Invert all the pixels on the display.
  * @param inverted If the pixels are inverted.
  */
-void display_invert(bool inverted);
+void display_invert(const struct device *dev, bool inverted);
 
 /**
- * @brief Clear the display.
- * @param data The byte to set each byte of the display to.
+ * @brief Clear the display with zeroes.
  */
-void display_clear(unsigned char data);
+void display_clear();
 
 /**
  * @brief Set the contrast of the display.
  * 
  * @param level The contrast level from 0 to 255.
  */
-void display_set_contrast(uint8_t level);
+void display_set_contrast(const struct device *dev, uint8_t level);
 
 /**
  * @brief Write pixel data to the display.
@@ -76,7 +61,7 @@ void display_set_contrast(uint8_t level);
  * @returns Zero on success or a non-zero error number on failure.
  */
 int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
-        uint8_t row_end, uint8_t *data, unsigned int n);
+        uint8_t row_end, const uint8_t *data, unsigned int n);
 
 /**
  * @brief A structure containing an image to display.

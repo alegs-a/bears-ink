@@ -1,0 +1,5 @@
+compatible: "solomon,ssd1309"
+
+description: SSD1309 OLED Display module accessed through I2C bus
+
+include: [i2c-device.yaml]

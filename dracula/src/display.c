@@ -1,12 +1,18 @@
 #include "display.h"
-#include "rfid.h"
 
 #include <zephyr/irq.h>
+#include <zephyr/device.h>
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
-#include <zephyr/drivers/spi.h>
 #include <zephyr/drivers/gpio.h>
- 
+#include <zephyr/drivers/i2c.h>
+
+struct ssd1309_data {
+};
+struct ssd1309_config {
+    struct i2c_dt_spec i2c;
+};
+
 /**
  * @brief Commands sent to the display driver.
  */
@@ -70,66 +76,19 @@ void display_main(void*, void*, void*);
 // Defined and initialised be the above macro.
 extern const k_tid_t display_thread_id;
 
-// The device structure.
-static const struct device *display_device = DEVICE_DT_GET(DT_ALIAS(display));
+/* All following bytes will contain commands */
+#define SSD1309_CONTROL_ALL_BYTES_CMD		0x00
+/* All following bytes will contain data */
+#define SSD1309_CONTROL_ALL_BYTES_DATA		0x40
 
 // https://docs.zephyrproject.org/latest/build/dts/zephyr-user-node.html#gpios
-static const struct gpio_dt_spec display_pin_dc = GPIO_DT_SPEC_GET(DT_NODELABEL(display_dc), gpios);
 static const struct gpio_dt_spec display_pin_reset = GPIO_DT_SPEC_GET(DT_NODELABEL(display_reset), gpios);
-static const struct gpio_dt_spec display_pin_cs = GPIO_DT_SPEC_GET(DT_NODELABEL(display_cs), gpios);
-
-static const struct spi_config spi_configuration = {
-    .frequency = 10000000,
-    .operation = SPI_WORD_SET(8) | SPI_TRANSFER_MSB | SPI_MODE_CPOL,
-    .slave = 0,
-    .cs = {
-        .delay = 0,
-        .gpio = {
-            .port = NULL
-        }
-    }
-};
-
-static const struct spi_config *spi = &spi_configuration;
 
 // Mutex protecting concurrent access to the display interface.
 // static K_MUTEX_DEFINE(mutex);
 
 // Queue of display requests being handled in sequence.
 K_FIFO_DEFINE(display_queue);
-
-/**
- * @brief Send bytes to the display.
- * 
- * @param bytes The byte buffer to send.
- * @param length The length of the bytes buffer in bytes.
- * 
- * @returns Zero on success or a non-zero error number on failure.
- */
-int display_send(uint8_t *bytes, int length)
-{
-    // We discovered the STM32 cannot drive the I2C1 bus and the SPI1 bus
-    // simultaneously, and don't have enough time to reimplement this driver
-    // using the I2C api
-    return 0;
-
-    struct spi_buf buffer = {
-        .buf = bytes,
-        .len = length
-    };
-
-    struct spi_buf_set set = {
-        .buffers = &buffer,
-        .count = 1
-    };
-
-    int error = spi_write(display_device, spi, &set);
-    if (error) {
-        printk("spi failed to write: %i\n", error);
-    }
-
-    return error;
-}
 
 /**
  * @brief Send commands to the display.
@@ -139,16 +98,10 @@ int display_send(uint8_t *bytes, int length)
  * 
  * @returns Zero on success or a non-zero error number on failure.
  */
-int display_command(uint8_t *command, int length)
+int display_command(const struct device *dev, const uint8_t *command, int length)
 {
-    // command low
-    int error = gpio_pin_set_dt(&display_pin_dc, 0);
-    if (error)
-        return error;
-
-    k_usleep(1);
-
-    return display_send(command, length);
+    const struct ssd1309_config *config = dev->config;
+    return i2c_burst_write_dt(&config->i2c, SSD1309_CONTROL_ALL_BYTES_CMD, command, length);
 }
 
 /**
@@ -159,16 +112,10 @@ int display_command(uint8_t *command, int length)
  * 
  * @returns Zero on success or a non-zero error number on failure.
  */
-int display_data(uint8_t *data, int length)
+int display_data(const struct device *dev, const uint8_t *data, int length)
 {
-    // command high
-    int error = gpio_pin_set_dt(&display_pin_dc, 1);
-    if (error)
-        return error;
-
-    k_usleep(1);
-
-    return display_send(data, length);
+    const struct ssd1309_config *config = dev->config;
+    return i2c_burst_write_dt(&config->i2c, SSD1309_CONTROL_ALL_BYTES_DATA, data, length);
 }
 
 /**
@@ -185,11 +132,12 @@ int display_reset()
     return 0;
 }
 
-int display_init()
+int ssd1309_init(const struct device *dev)
 {
-    if (!device_is_ready(display_device)) {
-        printk("display device not ready\n");
-        return 1;
+    const struct ssd1309_config *config = dev->config;
+    if (!device_is_ready(config->i2c.bus)) {
+        printk("I2C bus %s not ready\n", config->i2c.bus->name);
+        return -ENODEV;
     }
 
     // Configure the reset pin to be initially high (reset is low).
@@ -198,22 +146,6 @@ int display_init()
         printk("display reset pin configure failed\n");
         return error;
     }
-
-    // Configure display data / command pin to be low (command).
-    error = gpio_pin_configure_dt(&display_pin_dc, GPIO_OUTPUT_INACTIVE);
-    if (error) {
-        printk("display data/command pin configure failed\n");
-        return error;
-    }
-
-    // Configure the chip select pin to always be low (always select the
-    // display).
-    error = gpio_pin_configure_dt(&display_pin_cs, GPIO_OUTPUT_INACTIVE);
-    if (error) {
-        printk("display chip select pin configure failed\n");
-        return error;
-    }
-
     // Hard reset before initialisation.
     display_reset();
 
@@ -232,23 +164,24 @@ int display_init()
         COMMAND_SET_SCAN_DESCENDING,
         COMMAND_DEFAULT_START_LINE,
         COMMAND_ADDRESS_MODE, ADDRESS_MODE_HORISONTAL,
-        COMMAND_SET_CONTRAST, 127,
+        COMMAND_SET_CONTRAST, 255,
         COMMAND_DISPLAY_ON,
         COMMAND_SET_INVERSION_NORMAL,
         COMMAND_DEACTIVATE_SCROLL,
         COMMAND_WAKE
     };
 
-    error = display_command(initialisation, sizeof(initialisation));
+    error = display_command(dev, initialisation, sizeof(initialisation));
     if (error) {
         printk("display initialisation sequence failed with %i\n", error);
+        return -ENODEV;
     }
 
     k_usleep(1);
 
-    display_clear(0x00);
+    display_clear(dev, 0x00);
 
-    display_invert(true);
+    display_invert(dev, true);
 
     return error;
 }
@@ -267,7 +200,7 @@ int display_init()
  * 
  * @returns If the display bounds were set.
  */
-int display_set_bounds(uint8_t column_begin, uint8_t column_end,
+int display_set_bounds(const struct device *dev, uint8_t column_begin, uint8_t column_end,
         uint8_t row_begin, uint8_t row_end)
 {
     uint8_t buffer[] = {
@@ -275,55 +208,39 @@ int display_set_bounds(uint8_t column_begin, uint8_t column_end,
         COMMAND_SET_COLUMN_ADDRESS, column_begin, column_end
     };
 
-    return display_command(buffer, sizeof(buffer));
+    return display_command(dev, buffer, sizeof(buffer));
 }
 
-void display_clear(unsigned char byte)
-{
-    display_set_bounds(0, DISPLAY_WIDTH - 1, 0, DISPLAY_HEIGHT - 1);
-
-    for (int i = 0; i < 1024; i++) {
-        display_data(&byte, 1);
-    }
-}
-
-void display_sleep()
-{
-    uint8_t buffer[] = {COMMAND_SLEEP};
-    display_command(buffer, sizeof(buffer));
-}
-
-void display_wake()
-{
-    uint8_t buffer[] = {COMMAND_WAKE};
-    display_command(buffer, sizeof(buffer));
-}
-
-void display_set_contrast(uint8_t level)
+void display_set_contrast(const struct device *dev, uint8_t level)
 {
     uint8_t buffer[] = {COMMAND_SET_CONTRAST, level};
-    display_command(buffer, sizeof(buffer));
+    display_command(dev, buffer, sizeof(buffer));
 }
 
-void display_invert(bool inverted)
+void display_invert(const struct device *dev, bool inverted)
 {
     uint8_t buffer[1] = {inverted ? COMMAND_SET_INVERSION_INVERTED : COMMAND_SET_INVERSION_NORMAL};
-    display_command(buffer, sizeof(buffer));
+    display_command(dev, buffer, sizeof(buffer));
 }
 
-int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
-        uint8_t row_end, uint8_t *data, unsigned int n)
-{
-    int error = display_set_bounds(column_begin, column_end, row_begin, row_end);
-    if (error)
-        return error;
+#define DT_DRV_COMPAT solomon_ssd1309
+#define SSD1309_INIT_PRIO 70
+#define SSD1309_INIT(inst)                                        \
+    static struct ssd1309_data ssd1309_data_##inst = {            \
+    };                                                            \
+    static const struct ssd1309_config ssd1309_cfg_##inst = {     \
+        .i2c = I2C_DT_SPEC_INST_GET(inst),                        \
+    };                                                            \
+    I2C_DEVICE_DT_INST_DEFINE(inst,                               \
+           ssd1309_init, NULL,                                    \
+           &ssd1309_data_##inst, &ssd1309_cfg_##inst,             \
+           POST_KERNEL, SSD1309_INIT_PRIO, NULL);
 
-    error = display_data(data, n);
-    if (error)
-        return error;
+DT_INST_FOREACH_STATUS_OKAY(SSD1309_INIT)
 
-    return 0;
-}
+
+// The device structure.
+static const struct device *display_device = DEVICE_DT_GET(DT_NODELABEL(display));
 
 /**
  * @brief An image requst to display
@@ -339,6 +256,28 @@ struct ImageMessage {
     /// The y coordinate of the image.
     unsigned int y;
 };
+
+const uint8_t zeroes[1024];
+
+int display_write(uint8_t column_begin, uint8_t column_end, uint8_t row_begin,
+        uint8_t row_end, const uint8_t *data, unsigned int n)
+{
+    int error = display_set_bounds(display_device, column_begin, column_end, row_begin, row_end);
+    if (error)
+        return error;
+
+    error = display_data(display_device, data, n);
+    if (error)
+        return error;
+
+    return 0;
+}
+
+void display_clear()
+{
+    display_write(0, DISPLAY_WIDTH - 1, 0, DISPLAY_HEIGHT - 1,
+                  zeroes, 1024);
+}
 
 int display_image(struct Image *image, unsigned int x, unsigned int y)
 {

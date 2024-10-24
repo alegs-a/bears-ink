@@ -1,20 +1,8 @@
 #include <zephyr/dt-bindings/gpio/gpio.h>
 
-/ {
-	aliases {
-		display = &spi1;
-	};
-};
-
 &leds {
-	display_dc: display_dc {
-		gpios = <&gpioa 4 GPIO_ACTIVE_HIGH>;
-	};
 	display_reset: display_reset {
 		gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
-	};
-	display_cs: display_cs {
-		gpios = <&gpiob 0 GPIO_ACTIVE_HIGH>;
 	};
 	rfid_buzzer: buzzer {
 		gpios = <&gpioa 8 GPIO_ACTIVE_HIGH>;
@@ -26,6 +14,12 @@
 
 &i2c1 {
 	status = "okay";
+
+	display: display@3c {
+		reg = <0x3c>;
+		status = "okay";
+		compatible = "solomon,ssd1309";
+	};
 
 	rfid_mux: mux@70 {
 		reg = <0x70>;
@@ -237,8 +231,4 @@
 			};
 		};
 	};
-};
-
-&spi1 {
-	status = "okay";
 };
