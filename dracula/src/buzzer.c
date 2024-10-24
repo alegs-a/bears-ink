@@ -54,12 +54,15 @@ void buzzer_main(void *, void *, void *)
             gpio_pin_set_dt(&buzzer_pin, 0);
             break;
         case READ_OK:
+        case TURN_OK:
+        case TURN_END:
             // BEEP
             gpio_pin_set_dt(&buzzer_pin, 1);
             k_msleep(300);
             gpio_pin_set_dt(&buzzer_pin, 0);
             break;
         case READ_ERROR:
+        case TURN_ERROR:
             // BI-BIP
             gpio_pin_set_dt(&buzzer_pin, 1);
             k_msleep(50);

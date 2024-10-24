@@ -1,5 +1,6 @@
 #include "dracula.h"
 #include "ai.h"
+#include "buzzer.h"
 #include "room.h"
 #include "rfid.h"
 #include "ui.h"
@@ -426,6 +427,7 @@ static void player_rest(uint8_t player, struct GameState *gamestate) {
         } else {
             display_clear(0x00);
             err_invalid_resource();
+            buzzer_send(TURN_ERROR);
             display_health(gamestate->player_health, gamestate->dracula_health);
         }
         k_mutex_unlock(&gamestateMutex);
@@ -656,25 +658,34 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
             if (!player_moved && !garlic_thrown) { 
                 player_rest(player, gamestate);
             }
+            buzzer_send(TURN_OK);
             break;
         }
         if (turn_over) {
             display_clear(0x00);
             err_too_many_actions(); // Will do for now
+            buzzer_send(TURN_ERROR);
             display_health(gamestate->player_health, gamestate->dracula_health);
             continue;
         }
         else if (turn.action == WATER && throw_water(player, gamestate, turn.room_name)) {
             turn_over = true;
+            buzzer_send(TURN_OK);
         }
         else if (turn.action == LIGHT && create_light(player, gamestate, turn.room_name)) {
             turn_over = true;
+            buzzer_send(TURN_OK);
         }
         else if (turn.action == GARLIC && throw_garlic(player, gamestate, turn.room_name)) {
             garlic_thrown = true;
+            buzzer_send(TURN_OK);
         }
         else if (turn.action == MOVE && player_move(player, gamestate, turn.room_name, player_moved)) {
             player_moved = true;
+            buzzer_send(TURN_OK);
+        }
+        else {
+            buzzer_send(TURN_ERROR);
         }
     }
 }
