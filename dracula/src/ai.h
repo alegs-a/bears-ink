@@ -54,6 +54,7 @@ struct GameState {
     // i of sunlights_from.
     struct RoomBuffer sunlights_to;
     struct RoomBuffer sunlights_from;
+    struct RoomBuffer garlic_rooms;
     // true iff Dracula can bite a player on this turn
     bool can_bite;
 };
