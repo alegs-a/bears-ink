@@ -19,11 +19,6 @@ int main()
 {
     printk("Dracula!\n");
 
-    int error = display_init();
-    if (error) {
-        printk("display init failed with %i\n", error);
-    }
-
     buzzer_send(STARTUP);
     rfid_thread_id = k_thread_create(&rfid_thread_data, rfid_stack,
                                      K_THREAD_STACK_SIZEOF(rfid_stack),
