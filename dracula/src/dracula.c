@@ -270,6 +270,18 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
                 error = true;
                 break;
             }
+            
+            bool light_exists = false;
+            for (uint8_t i = 0; i < gamestate->sunlights_to.length; i++) {
+                if (gamestate->sunlights_to.rooms[i]->room == tokens[i].room) {
+                    light_exists = true;
+                    continue;
+                }
+            }
+            if (light_exists) {
+                continue;
+            }
+
             action_val = LIGHT;
             room_val = tokens[i].room;
         }
