@@ -11,6 +11,9 @@ enum BuzzKind {
     STARTUP,
     READ_OK,
     READ_ERROR,
+    TURN_OK,
+    TURN_ERROR,
+    TURN_END,
 };
 
 void buzzer_send(enum BuzzKind kind);
