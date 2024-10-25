@@ -94,7 +94,8 @@ void dracula_main() {
         .garlic=MAX_GARLIC, .dracula_health=DRACULA_HEALTH, 
         .can_bite=true, .cur_player=0, .player_resting = false,
         .sunlights_from={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]},
-        .sunlights_to={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]}};
+        .sunlights_to={.length=0, .rooms=&(Room*[PLAYER_COUNT]){NULL, NULL, NULL, NULL}[0]},
+        .garlic_rooms={.length=0, .rooms=&(Room*[MAX_GARLIC]){NULL, NULL, NULL, NULL}[0]}};
 
     // Initialise players
     gamestate.players = &(struct Player [PLAYER_COUNT]){
@@ -266,21 +267,21 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             }
         }
         else if (tokens[i].kind == Sunlight) {
-            // Create an error if an action has be done already
-            if (action_val != -1) {
-                error = true;
-                break;
-            }
-            
             bool light_exists = false;
             for (uint8_t i = 0; i < gamestate->sunlights_to.length; i++) {
                 if (gamestate->sunlights_to.rooms[i]->room == tokens[i].room) {
                     light_exists = true;
-                    continue;
+                    break;
                 }
             }
             if (light_exists) {
                 continue;
+            }
+
+            // Create an error if an action has be done already
+            if (action_val != -1) {
+                error = true;
+                break;
             }
 
             action_val = LIGHT;
@@ -296,6 +297,17 @@ static struct Turn player_input(uint8_t player, struct GameState *gamestate) {
             room_val = tokens[i].room;
         }
         else if (tokens[i].kind == Garlic) {
+            bool garlic_exists = false;
+            for (uint8_t i = 0; i < gamestate->garlic_rooms.length; i++) {
+                if (gamestate->garlic_rooms.rooms[i]->room == tokens[i].room) {
+                    garlic_exists = true;
+                    break;
+                }
+            }
+            if (garlic_exists) {
+                continue;
+            }
+
             // Create an error if an action has be done already
             if (action_val != -1) {
                 error = true;
@@ -579,6 +591,7 @@ static bool throw_garlic(uint8_t player, struct GameState *gamestate, enum RoomN
 
     // Update game state
     gamestate->garlic--;
+    add_with_duplicate(&(gamestate->garlic_rooms), &rooms[room]);
     k_mutex_unlock(&gamestateMutex);
     return true;
 }
@@ -701,6 +714,7 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
 static void full_players_turn(struct GameState *gamestate) {
     k_mutex_lock(&gamestateMutex, K_FOREVER);
     gamestate->garlic = MAX_GARLIC;
+    gamestate->garlic_rooms.length = 0;
     gamestate->can_bite_player_positions.length = 0;
     for (uint8_t i = 0; i < NUM_PLAYERS; i++) {
         // Run player turn
