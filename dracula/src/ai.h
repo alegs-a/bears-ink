@@ -19,8 +19,8 @@
 #define DRACULA_MOVES 3 // The number of spaces Dracula can move on his turn
 
 // Constants controlling on how much more aggressive Dracula gets depending on:
-#define WITHOUT_BITE 5 // the last bite
-#define WITHOUT_INFO 4 // the last POSITIVE information (bites, detection with
+#define WITHOUT_BITE 2 // the last bite
+#define WITHOUT_INFO 2 // the last POSITIVE information (bites, detection with
                        // sunlight or a garlic
 
 

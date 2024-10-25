@@ -23,6 +23,7 @@ void rfid_main(void *, void *, void *);
 
 #define DT_DRV_COMPAT nxp_mfrc522
 #define MFRC522_INIT_PRIO 64
+#define MFRC522_ANTENNA_GAIN 0x30
 
 // BUILD_ASSERT(MFRC522_INIT_PRIO > CONFIG_I2C_TCA954X_CHANNEL_INIT_PRIO,
 //     "RFID readers must be initialised after their bus");
@@ -55,7 +56,7 @@ int mfrc522_init(const struct device *dev)
         return -ENODEV;
     }
 
-    mfrc522.PCD_SetAntennaGain(0x30);
+    mfrc522.PCD_SetAntennaGain(MFRC522_ANTENNA_GAIN);
 
     return 0;
 }
@@ -78,7 +79,7 @@ int mfrc522_init(const struct device *dev)
         return DEVICE_DT_INST_GET(inst);
 
 #define MFRC522_DETECT_NEW(inst) \
-    detect_new_card(mfrc522, (const struct mfrc522_cfg *)DEVICE_DT_INST_GET(inst)->config);
+    detect_new_card(mfrc522, DEVICE_DT_INST_GET(inst));
 
 
 DT_INST_FOREACH_STATUS_OKAY(MFRC522_INIT)
@@ -118,9 +119,17 @@ DraculaToken currentTokens[MAX_TOKENS];
  *
  * This function will configure mfrc522 to use the given room internally.
  */
-void detect_new_card(MFRC522 mfrc522, const struct mfrc522_cfg* room)
+void detect_new_card(MFRC522 mfrc522, const struct device *dev)
 {
+    const struct mfrc522_cfg *room = (const struct mfrc522_cfg *)dev->config;
     mfrc522.i2c = &room->i2c;
+
+    if (mfrc522.PCD_GetAntennaGain() != MFRC522_ANTENNA_GAIN) {
+        printk("Reinitialising room %s...\n", room->room_name);
+        if (mfrc522_init(dev)) {
+            return;
+        }
+    }
 
     mfrc522.PCD_AntennaOn();
 

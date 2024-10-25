@@ -100,6 +100,7 @@ K_FIFO_DEFINE(display_queue);
  */
 int display_command(const struct device *dev, const uint8_t *command, int length)
 {
+    return 0;
     const struct ssd1309_config *config = dev->config;
     return i2c_burst_write_dt(&config->i2c, SSD1309_CONTROL_ALL_BYTES_CMD, command, length);
 }
@@ -114,6 +115,7 @@ int display_command(const struct device *dev, const uint8_t *command, int length
  */
 int display_data(const struct device *dev, const uint8_t *data, int length)
 {
+    return 0;
     const struct ssd1309_config *config = dev->config;
     return i2c_burst_write_dt(&config->i2c, SSD1309_CONTROL_ALL_BYTES_DATA, data, length);
 }

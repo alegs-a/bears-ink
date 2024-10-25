@@ -10,6 +10,30 @@
     #include "dracula.h"
     #include <zephyr/sys/printk.h>
     #define ASSERT(b, err_str) if (!(b)) printk("Assertion error: %s at (%s:%d)\n", err_str, __FILE__, __LINE__);
+    char *room_names[] = {
+        "NHALL",
+        "TOMB",
+        "GUARDEDWAY",
+        "GALLERY",
+        "ALLEY",
+        "BONEPIT",
+        "ENTRANCE",
+        "VENT",
+        "DUNGEON",
+        "DINING",
+        "LIBRARY",
+        "CRYPT",
+        "PASSAGE",
+        "CHAPEL",
+        "NEST",
+        "BATHROOM",
+        "CANAL",
+        "STAIRCASE",
+        "CELLAR",
+        "SHALL",
+        "BALLROOM",
+        "RESOURCE"
+    };
 #else
     #include "../../prototypes/debug/debug.h"
     #include <stdio.h>
@@ -32,6 +56,13 @@ static void print_room_buffer(const struct RoomBuffer buf) {
         printf("%s\n", room_names[buf.rooms[i]->room]);
     }
     printf("\n");
+}
+#else
+static void print_room_buffer(const struct RoomBuffer buf) {
+    for (int i = 0; i < buf.length; i++) {
+        printk("%s\n", room_names[buf.rooms[i]->room]);
+    }
+    printk("\n");
 }
 #endif
 
@@ -391,8 +422,10 @@ void dracula_turn(const struct GameState *st, struct RoomBuffer *bites) {
 
     #ifdef DEBUG
     printf("Dracula state:\n");
-    print_room_buffer(dracula_state);
+    #else
+    printk("Dracula state:\n");
     #endif
+    print_room_buffer(dracula_state);
 }
 
 
@@ -420,8 +453,10 @@ bool dracula_is_present(Room *room) {
 
     #ifdef DEBUG
     printf("Dracula state:\n");
-    print_room_buffer(dracula_state);
+    #else
+    printk("Dracula state\n");
     #endif
+    print_room_buffer(dracula_state);
 
     return false;
 }

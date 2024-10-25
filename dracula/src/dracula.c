@@ -11,6 +11,8 @@
 #include <zephyr/sys/printk.h>
 #include <zephyr/drivers/gpio.h>
 
+extern char *room_names[];
+
 static const struct gpio_dt_spec button =
     GPIO_DT_SPEC_GET(DT_NODELABEL(confirm_button), gpios);
 
@@ -663,6 +665,10 @@ static void player_turn(uint8_t player, struct GameState *gamestate) {
     bool turn_over = false;
     // Repeat actions until the turn ends
     for (;;) {
+        printk("Player 1: %s\n", room_names[gamestate->player_positions.rooms[0]->room]);
+        printk("Player 2: %s\n", room_names[gamestate->player_positions.rooms[1]->room]);
+        printk("Player 3: %s\n", room_names[gamestate->player_positions.rooms[2]->room]);
+        printk("Player 4: %s\n", room_names[gamestate->player_positions.rooms[3]->room]);
         struct Turn turn = player_input(player, gamestate);
         if (turn.action == ACTION_ERROR) { 
             continue;
@@ -770,6 +776,19 @@ static void full_dracula_turn(struct GameState *gamestate) {
                     display_clear(0x00);
                     mes_player_bitten(i);
                     display_health(gamestate->player_health, gamestate->dracula_health);
+                    //Wait until confirmation button
+                    while (gpio_pin_get_dt(&button)) {
+                        // Wait for button to be unpressed, before being pressed again
+                        k_msleep(100);
+                    }
+                    k_msleep(100); // Debounce
+                    for(;;) {
+                        k_msleep(100);
+                        if (gpio_pin_get_dt(&button)) {
+                            printk(" Button!\n");
+                            break;
+                        }
+                    }
                     break;
                 }               
             }
